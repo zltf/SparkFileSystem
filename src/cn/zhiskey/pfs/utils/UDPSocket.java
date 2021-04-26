@@ -1,11 +1,72 @@
 package cn.zhiskey.pfs.utils;
 
+import java.io.IOException;
+import java.net.*;
+import java.util.List;
+
 /**
- * TODO: description
+ * UDP Socket 工具类
  *
  * @author Zhiskey
  */
 public class UDPSocket {
+    /**
+     * UDP发送字符串消息
+     *
+     * @param host 目的主机
+     * @param port 目的端口
+     * @param str 待发送的消息
+     * @author Zhiskey
+     */
+    public static void send(String host, int port, String str) {
+        send(host, port, str.getBytes());
+    }
+
+    /**
+     * UDP发送字节数组消息
+     *
+     * @param host 目的主机
+     * @param port 目的端口
+     * @param bytes 待发送的消息
+     * @author Zhiskey
+     */
+    public static void send(String host, int port, byte[] bytes) {
+        DatagramSocket datagramSocket = null;
+        try {
+            datagramSocket = new DatagramSocket();
+            datagramSocket.send(new DatagramPacket(bytes, bytes.length, InetAddress.getByName(host), port));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (datagramSocket != null) {
+            datagramSocket.close();
+        }
+    }
+
+    /**
+     * UDP广播字符串消息
+     *
+     * @param port 目的端口
+     * @param str 待发送的消息
+     * @author Zhiskey
+     */
+    public static void broadcast(int port, String str) {
+        try {
+            NetworkInterface netInterface = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
+            if (!netInterface.isLoopback() && netInterface.isUp()) {
+                List<InterfaceAddress> interfaceAddresses = netInterface.getInterfaceAddresses();
+                for (InterfaceAddress interfaceAddress : interfaceAddresses) {
+                    // 只有 IPv4 网络具有广播地址，因此对于 IPv6 网络将返回 null。
+                    if (interfaceAddress.getBroadcast()!= null) {
+                        String broadcastIP =interfaceAddress.getBroadcast().getHostAddress();
+                        send(broadcastIP, port, str);
+                    }
+                }
+            }
+        } catch (SocketException | UnknownHostException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
 /*

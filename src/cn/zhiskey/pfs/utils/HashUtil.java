@@ -5,7 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * 计算Hash值
+ * Hash 工具类
  *
  * @author Zhiskey
  */
@@ -51,15 +51,15 @@ public class HashUtil {
      * @author Zhiskey
      */
     private static String bytes2Hex(byte[] bytes){
-        StringBuilder stringBuffer = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         String temp;
         for (byte aByte : bytes) {
             temp = Integer.toHexString(aByte & 0xFF);
             if (temp.length() == 1) {
-                stringBuffer.append("0");
+                stringBuilder.append("0");
             }
-            stringBuffer.append(temp);
+            stringBuilder.append(temp);
         }
-        return stringBuffer.toString();
+        return stringBuilder.toString();
     }
 }
