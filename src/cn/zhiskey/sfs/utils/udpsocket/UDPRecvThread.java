@@ -1,4 +1,4 @@
-package cn.zhiskey.pfs.utils.udpsocket;
+package cn.zhiskey.sfs.utils.udpsocket;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

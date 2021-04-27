@@ -1,4 +1,4 @@
-package cn.zhiskey.pfs.utils;
+package cn.zhiskey.sfs.utils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

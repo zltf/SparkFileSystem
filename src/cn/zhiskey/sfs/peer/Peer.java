@@ -1,6 +1,6 @@
-package cn.zhiskey.pfs.peer;
+package cn.zhiskey.sfs.peer;
 
-import cn.zhiskey.pfs.utils.udpsocket.UDPSocket;
+import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 
 /**
  * TODO: description

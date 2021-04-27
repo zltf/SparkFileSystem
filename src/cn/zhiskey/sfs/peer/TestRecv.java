@@ -1,4 +1,4 @@
-package cn.zhiskey.pfs.peer;
+package cn.zhiskey.sfs.peer;
 
 import java.io.IOException;
 import java.net.*;
