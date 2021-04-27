@@ -15,8 +15,8 @@ public class Peer {
         return null;
     }
 
-    private void joinNetWork() {
-
+    private void joinNetWork(String seedPeerHost) {
+        
     }
 
     public static void main(String[] args) {

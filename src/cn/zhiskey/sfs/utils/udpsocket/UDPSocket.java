@@ -45,7 +45,7 @@ public class UDPSocket {
     }
 
     /**
-     * UDP广播字符串消息
+     * UDP本地广播字符串消息
      *
      * @param port 目的端口
      * @param str 待发送的消息
@@ -59,7 +59,7 @@ public class UDPSocket {
     }
 
     /**
-     * 获取广播IP地址
+     * 获取本地广播IP地址
      *
      * @return java.lang.String 广播IP地址
      * @author Zhiskey
