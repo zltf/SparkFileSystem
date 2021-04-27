@@ -1,6 +1,6 @@
 package cn.zhiskey.pfs.peer;
 
-import cn.zhiskey.pfs.utils.UDPSocket;
+import cn.zhiskey.pfs.utils.udpsocket.UDPSocket;
 
 /**
  * TODO: description
@@ -8,6 +8,13 @@ import cn.zhiskey.pfs.utils.UDPSocket;
  * @author Zhiskey
  */
 public class Peer {
+
+    private byte[] hashID = null;
+
+    private byte[] createHashID() {
+        return null;
+    }
+
     private void joinNetWork() {
 
     }
