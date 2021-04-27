@@ -2,6 +2,7 @@ package cn.zhiskey.pfs.utils;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Enumeration;
 import java.util.List;
 
 /**
@@ -51,21 +52,40 @@ public class UDPSocket {
      * @author Zhiskey
      */
     public static void broadcast(int port, String str) {
+        String broadcastIP = getLocalBroadcastIP();
+        if (broadcastIP != null) {
+            send("192.168.1.255", port, str);
+        }
+    }
+
+    /**
+     * 获取广播IP地址
+     *
+     * @return java.lang.String 广播IP地址
+     * @author Zhiskey
+     */
+    public static String getLocalBroadcastIP() {
+        String broadcastIP = null;
         try {
-            NetworkInterface netInterface = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
-            if (!netInterface.isLoopback() && netInterface.isUp()) {
-                List<InterfaceAddress> interfaceAddresses = netInterface.getInterfaceAddresses();
-                for (InterfaceAddress interfaceAddress : interfaceAddresses) {
-                    // 只有 IPv4 网络具有广播地址，因此对于 IPv6 网络将返回 null。
-                    if (interfaceAddress.getBroadcast()!= null) {
-                        String broadcastIP =interfaceAddress.getBroadcast().getHostAddress();
-                        send(broadcastIP, port, str);
+            Enumeration<?> netInterfaces = NetworkInterface.getNetworkInterfaces();
+            while (netInterfaces.hasMoreElements()) {
+                NetworkInterface netInterface = (NetworkInterface) netInterfaces.nextElement();
+                if (!netInterface.isLoopback()&& netInterface.isUp()) {
+                    List<InterfaceAddress> interfaceAddresses = netInterface.getInterfaceAddresses();
+                    for (InterfaceAddress interfaceAddress : interfaceAddresses) {
+                        //只有 IPv4 网络具有广播地址，因此对于 IPv6 网络将返回 null。
+                        if(interfaceAddress.getBroadcast()!= null){
+                            broadcastIP =interfaceAddress.getBroadcast().getHostAddress();
+
+                        }
                     }
                 }
             }
-        } catch (SocketException | UnknownHostException e) {
+        } catch (SocketException e) {
             e.printStackTrace();
         }
+        System.out.println(broadcastIP);
+        return broadcastIP;
     }
 }
 
