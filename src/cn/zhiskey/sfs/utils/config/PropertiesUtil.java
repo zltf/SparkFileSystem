@@ -28,6 +28,17 @@ public enum PropertiesUtil {
     private String path = null;
 
     /**
+     * 返回配置信息管理工具实例<br>
+     * 兼容传统的单例模式实力获取方式
+     *
+     * @return cn.zhiskey.sfs.utils.config.PropertiesUtil 配置信息管理工具实例
+     * @author Zhiskey
+     */
+    public static PropertiesUtil getInstance() {
+        return INSTANCE;
+    }
+
+    /**
      * 加载指定路径配置文件
      *
      * @param path 配置文件路径
