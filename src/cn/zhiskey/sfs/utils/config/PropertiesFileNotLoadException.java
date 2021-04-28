@@ -13,6 +13,6 @@ public class PropertiesFileNotLoadException extends Exception {
      * @author Zhiskey
      */
     public PropertiesFileNotLoadException(){
-        super("Please call ConfigUtil.INSTANCE.load(path) to load properties file");
+        super("Please call PropertiesUtil.INSTANCE.load(path) to load properties file");
     }
 }

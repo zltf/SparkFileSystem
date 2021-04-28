@@ -11,7 +11,7 @@ import java.util.Properties;
  *
  * @author Zhiskey
  */
-public enum  ConfigUtil {
+public enum PropertiesUtil {
     /**
      * 实例
      */
@@ -110,15 +110,5 @@ public enum  ConfigUtil {
         } else {
             new PropertiesFileNotLoadException().printStackTrace();
         }
-    }
-
-    /**
-     * 获取项目根目录下的res目录路径
-     *
-     * @return java.lang.String 项目根目录下的res目录路径
-     * @author Zhiskey
-     */
-    public static String getResPath() {
-        return System.getProperty("user.dir") + "/res/";
     }
 }
