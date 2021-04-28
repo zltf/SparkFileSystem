@@ -5,7 +5,7 @@ import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 /**
  * TODO: description
  *
- * @author Zhiskey
+ * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class Peer {
 

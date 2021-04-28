@@ -6,9 +6,9 @@ import java.util.Enumeration;
 import java.util.List;
 
 /**
- * UDP Socket 工具类
+ * UDP Socket工具类
  *
- * @author Zhiskey
+ * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class UDPSocket {
     /**
@@ -17,7 +17,7 @@ public class UDPSocket {
      * @param host 目的主机
      * @param port 目的端口
      * @param str 待发送的消息
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static void send(String host, int port, String str) {
         send(host, port, str.getBytes());
@@ -29,7 +29,7 @@ public class UDPSocket {
      * @param host 目的主机
      * @param port 目的端口
      * @param bytes 待发送的消息
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static void send(String host, int port, byte[] bytes) {
         DatagramSocket datagramSocket = null;
@@ -49,7 +49,7 @@ public class UDPSocket {
      *
      * @param port 目的端口
      * @param str 待发送的消息
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static void broadcast(int port, String str) {
         String broadcastIP = getLocalBroadcastIP();
@@ -62,7 +62,7 @@ public class UDPSocket {
      * 获取本地广播IP地址
      *
      * @return java.lang.String 广播IP地址
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static String getLocalBroadcastIP() {
         String broadcastIP = null;

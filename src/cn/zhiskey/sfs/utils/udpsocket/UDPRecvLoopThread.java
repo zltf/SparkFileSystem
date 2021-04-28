@@ -9,7 +9,7 @@ import java.net.SocketException;
  * UDP Socket消息接收循环线程<br>
  * 策略模式，构造时传入消息处理策略
  *
- * @author Zhiskey
+ * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class UDPRecvLoopThread extends Thread {
     /**
@@ -39,7 +39,7 @@ public class UDPRecvLoopThread extends Thread {
      * 初始化UDP Socket对象
      *
      * @param recvPort 接收消息的端口
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public UDPRecvLoopThread(int recvPort, Recvable recvable) {
         this.recvable = recvable;
@@ -56,7 +56,7 @@ public class UDPRecvLoopThread extends Thread {
     /**
      * 停止接收消息
      *
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public void stopRecv() {
         status = Status.STOP;
@@ -65,7 +65,7 @@ public class UDPRecvLoopThread extends Thread {
     /**
      * 关闭UDP Socket对象，释放端口
      *
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public void close() {
         status = Status.DISABLE;
@@ -76,7 +76,7 @@ public class UDPRecvLoopThread extends Thread {
      * 重写run()方法，并将其设置为final，不可重写<br>
      * 循环接收消息，并且将消息传递给recv()方法处理
      *
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     @Override
     public final void run() {
@@ -97,7 +97,7 @@ public class UDPRecvLoopThread extends Thread {
      *
      * @param datagramPacket datagramPacket对象
      * @return java.lang.String data字符串
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static String getDataString(DatagramPacket datagramPacket) {
         return new String(datagramPacket.getData(), datagramPacket.getOffset(),

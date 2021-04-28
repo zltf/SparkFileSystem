@@ -5,9 +5,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Hash 工具类
+ * Hash工具类
  *
- * @author Zhiskey
+ * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class HashUtil {
     /**
@@ -16,7 +16,7 @@ public class HashUtil {
      * @param bytes 待计算Hash的字节数组
      * @param hashType Hash的类型
      * @return byte[] 得到的Hash值的字节数组
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static byte[] getHash(byte[] bytes, String hashType) {
         MessageDigest messageDigest;
@@ -37,7 +37,7 @@ public class HashUtil {
      * @param str 待计算Hash的字符串
      * @param hashType Hash的类型
      * @return byte[] 得到的Hash值的字节数组
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static byte[] getHash(String str, String hashType) {
         return getHash(str.getBytes(StandardCharsets.UTF_8), hashType);
@@ -48,7 +48,7 @@ public class HashUtil {
      *
      * @param bytes 待转换的字节数组
      * @return java.lang.String 转换后的字符串
-     * @author Zhiskey
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     private static String bytes2Hex(byte[] bytes){
         StringBuilder stringBuilder = new StringBuilder();

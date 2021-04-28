@@ -5,7 +5,7 @@ import cn.zhiskey.sfs.utils.config.PropertiesUtil;
 /**
  * 测试模块功能
  *
- * @author Zhiskey
+ * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class Test {
     public static void main(String[] args) {
