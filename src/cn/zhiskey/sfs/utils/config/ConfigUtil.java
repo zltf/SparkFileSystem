@@ -11,7 +11,7 @@ import java.util.Properties;
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
-public enum PropertiesUtil {
+public enum ConfigUtil {
     /**
      * 实例
      */
@@ -31,10 +31,10 @@ public enum PropertiesUtil {
      * 返回配置信息管理工具实例<br>
      * 兼容传统的单例模式实力获取方式
      *
-     * @return cn.zhiskey.sfs.utils.config.PropertiesUtil 配置信息管理工具实例
+     * @return cn.zhiskey.sfs.utils.config.ConfigUtil 配置信息管理工具实例
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public static PropertiesUtil getInstance() {
+    public static ConfigUtil getInstance() {
         return INSTANCE;
     }
 
@@ -73,7 +73,7 @@ public enum PropertiesUtil {
                 e.printStackTrace();
             }
         } else {
-            new PropertiesFileNotLoadException().printStackTrace();
+            new ConfigFileNotLoadException().printStackTrace();
         }
     }
 
@@ -88,7 +88,7 @@ public enum PropertiesUtil {
         if(properties != null) {
             store(path, comments);
         } else {
-            new PropertiesFileNotLoadException().printStackTrace();
+            new ConfigFileNotLoadException().printStackTrace();
         }
     }
 
@@ -103,7 +103,7 @@ public enum PropertiesUtil {
         if(properties != null) {
             return properties.getProperty(key);
         } else {
-            new PropertiesFileNotLoadException().printStackTrace();
+            new ConfigFileNotLoadException().printStackTrace();
             return null;
         }
     }
@@ -119,7 +119,7 @@ public enum PropertiesUtil {
         if(properties != null) {
             properties.setProperty(key, value);
         } else {
-            new PropertiesFileNotLoadException().printStackTrace();
+            new ConfigFileNotLoadException().printStackTrace();
         }
     }
 }

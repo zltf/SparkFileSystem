@@ -50,7 +50,7 @@ public class HashUtil {
      * @return java.lang.String 转换后的字符串
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    private static String bytes2Hex(byte[] bytes){
+    public static String bytes2Hex(byte[] bytes){
         StringBuilder stringBuilder = new StringBuilder();
         String temp;
         for (byte aByte : bytes) {

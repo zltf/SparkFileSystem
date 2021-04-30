@@ -1,6 +1,6 @@
 package cn.zhiskey.sfs.peer;
 
-import cn.zhiskey.sfs.utils.config.PropertiesUtil;
+import cn.zhiskey.sfs.utils.config.ConfigUtil;
 
 /**
  * 测试模块功能
@@ -9,12 +9,12 @@ import cn.zhiskey.sfs.utils.config.PropertiesUtil;
  */
 public class Test {
     public static void main(String[] args) {
-        PropertiesUtil.getInstance().load("res/configTest.properties");
-        System.out.println(PropertiesUtil.getInstance().get("a"));
-        System.out.println(PropertiesUtil.getInstance().get("b"));
-        PropertiesUtil.getInstance().set("b", "1");
-        System.out.println(PropertiesUtil.getInstance().get("b"));
-        PropertiesUtil.getInstance().store("Configs");
+        ConfigUtil.getInstance().load("config/configTest.properties");
+        System.out.println(ConfigUtil.getInstance().get("a"));
+        System.out.println(ConfigUtil.getInstance().get("b"));
+        ConfigUtil.getInstance().set("b", "1");
+        System.out.println(ConfigUtil.getInstance().get("b"));
+        ConfigUtil.getInstance().store("Configs");
 //        new UDPRecvLoopThread(54321,
 //                datagramPacket -> System.out.println(UDPRecvLoopThread.getDataString(datagramPacket))).start();
     }

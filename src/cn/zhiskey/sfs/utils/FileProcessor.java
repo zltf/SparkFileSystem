@@ -1,7 +1,7 @@
 package cn.zhiskey.sfs.utils;
 
 /**
- * TODO: description
+ * 文件处理工具类
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
