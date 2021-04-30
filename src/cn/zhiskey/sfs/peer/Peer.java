@@ -2,7 +2,16 @@ package cn.zhiskey.sfs.peer;
 
 import cn.zhiskey.sfs.utils.HashUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -37,7 +46,7 @@ public class Peer {
         seed.append(new Random().nextInt());
 
         // 生成哈希ID
-        String hashType = ConfigUtil.getInstance().get("hash");
+        String hashType = ConfigUtil.getInstance().get("hashType", "SHA-256");
         return HashUtil.getHash(seed.toString(), hashType);
     }
 
@@ -46,16 +55,36 @@ public class Peer {
     }
 
     private void initPeer() {
+        Document document;
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
 
+            String path = "data/" + ConfigUtil.getInstance().get("peerDataPath");
+            File file = new File(path);
+
+            // 判断数据文件是否存在
+            if(file.exists()) {
+                // 解析xml文件
+                document = builder.parse(file);
+            } else {
+                document = builder.newDocument();
+            }
+        } catch (SAXException | ParserConfigurationException | IOException e) {
+            e.printStackTrace();
+        }
+
+        Node node = document.getDocumentElement();
+        System.out.println(node.getAttributes().getNamedItem("hashID").getNodeValue());
     }
 
     public static void main(String[] args) {
         // 载入配置文件
-        ConfigUtil.getInstance().load("config/config.properties");
+        ConfigUtil.getInstance().load("configs/config.properties");
 
         Peer peer = new Peer();
-//        peer.joinNetWork();
+        peer.joinNetWork("");
 //        UDPSocket.broadcast(54321, "test");
-        System.out.println(HashUtil.bytes2Hex(peer.createHashID()));
+//        System.out.println(HashUtil.bytes2Hex(peer.createHashID()));
     }
 }

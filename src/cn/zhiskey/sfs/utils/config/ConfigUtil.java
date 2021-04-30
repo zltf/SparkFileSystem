@@ -109,6 +109,23 @@ public enum ConfigUtil {
     }
 
     /**
+     * 获取某一属性的值，带默认值
+     *
+     * @param key 属性的键
+     * @param defaultValue 默认值
+     * @return java.lang.String 属性的值
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public String get(String key, String defaultValue) {
+        if(properties != null) {
+            return properties.getProperty(key, defaultValue);
+        } else {
+            new ConfigFileNotLoadException().printStackTrace();
+            return defaultValue;
+        }
+    }
+
+    /**
      * 设置某一属性的值
      *
      * @param key 属性的键

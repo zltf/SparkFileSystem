@@ -9,7 +9,7 @@ import cn.zhiskey.sfs.utils.config.ConfigUtil;
  */
 public class Test {
     public static void main(String[] args) {
-        ConfigUtil.getInstance().load("config/configTest.properties");
+        ConfigUtil.getInstance().load("configs/configTest.properties");
         System.out.println(ConfigUtil.getInstance().get("a"));
         System.out.println(ConfigUtil.getInstance().get("b"));
         ConfigUtil.getInstance().set("b", "1");
