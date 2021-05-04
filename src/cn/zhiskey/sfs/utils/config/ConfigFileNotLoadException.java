@@ -1,11 +1,12 @@
 package cn.zhiskey.sfs.utils.config;
 
 /**
- * properties文件未加载异常
+ * properties文件未加载异常<br>
+ * 运行时异常
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
-public class ConfigFileNotLoadException extends Exception {
+public class ConfigFileNotLoadException extends RuntimeException {
     /**
      * 构造方法<br>
      * 构造properties文件未加载异常

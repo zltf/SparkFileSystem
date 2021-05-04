@@ -1,6 +1,7 @@
 package cn.zhiskey.sfs.utils.config;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -42,18 +43,15 @@ public enum ConfigUtil {
      * 加载指定路径配置文件
      *
      * @param path 配置文件路径
+     * @throws IOException 当文件IO异常时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public void load(String path) {
+    public void load(String path) throws IOException {
         this.path = path;
         properties = new Properties();
-        try {
-            FileInputStream inputStream = new FileInputStream(this.path);
-            properties.load(inputStream);
-            inputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        FileInputStream inputStream = new FileInputStream(this.path);
+        properties.load(inputStream);
+        inputStream.close();
     }
 
     /**
@@ -61,9 +59,10 @@ public enum ConfigUtil {
      *
      * @param path 配置文件路径
      * @param comments 配置文件解释，取null值表示无解释
+     * @throws ConfigFileNotLoadException 当properties文件未成功加载时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public void store(String path, String comments) {
+    public void store(String path, String comments) throws ConfigFileNotLoadException {
         if(properties != null) {
             try {
                 FileOutputStream outputStream = new FileOutputStream(path);
@@ -73,7 +72,7 @@ public enum ConfigUtil {
                 e.printStackTrace();
             }
         } else {
-            new ConfigFileNotLoadException().printStackTrace();
+            throw new ConfigFileNotLoadException();
         }
     }
 
@@ -81,14 +80,15 @@ public enum ConfigUtil {
      * 保存配置信息至加载路径的配置文件，需要解释
      *
      * @param comments 配置文件解释，取null值表示无解释
+     * @throws ConfigFileNotLoadException 当properties文件未成功加载时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public void store(String comments) {
+    public void store(String comments) throws ConfigFileNotLoadException {
         // path为null，properties一定为null
         if(properties != null) {
             store(path, comments);
         } else {
-            new ConfigFileNotLoadException().printStackTrace();
+            throw new ConfigFileNotLoadException();
         }
     }
 
@@ -97,14 +97,14 @@ public enum ConfigUtil {
      *
      * @param key 属性的键
      * @return java.lang.String 属性的值
+     * @throws ConfigFileNotLoadException 当properties文件未成功加载时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public String get(String key) {
+    public String get(String key) throws ConfigFileNotLoadException {
         if(properties != null) {
             return properties.getProperty(key);
         } else {
-            new ConfigFileNotLoadException().printStackTrace();
-            return null;
+            throw  new ConfigFileNotLoadException();
         }
     }
 
@@ -114,14 +114,14 @@ public enum ConfigUtil {
      * @param key 属性的键
      * @param defaultValue 默认值
      * @return java.lang.String 属性的值
+     * @throws ConfigFileNotLoadException 当properties文件未成功加载时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public String get(String key, String defaultValue) {
+    public String get(String key, String defaultValue) throws ConfigFileNotLoadException {
         if(properties != null) {
             return properties.getProperty(key, defaultValue);
         } else {
-            new ConfigFileNotLoadException().printStackTrace();
-            return defaultValue;
+            throw new ConfigFileNotLoadException();
         }
     }
 
@@ -130,13 +130,14 @@ public enum ConfigUtil {
      *
      * @param key 属性的键
      * @param value 属性的值
+     * @throws ConfigFileNotLoadException 当properties文件未成功加载时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public void set(String key, String value) {
+    public void set(String key, String value) throws ConfigFileNotLoadException {
         if(properties != null) {
             properties.setProperty(key, value);
         } else {
-            new ConfigFileNotLoadException().printStackTrace();
+            throw new ConfigFileNotLoadException();
         }
     }
 }

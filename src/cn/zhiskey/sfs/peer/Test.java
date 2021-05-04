@@ -1,6 +1,9 @@
 package cn.zhiskey.sfs.peer;
 
+import cn.zhiskey.sfs.utils.config.ConfigFileNotLoadException;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
+
+import java.io.IOException;
 
 /**
  * 测试模块功能
@@ -9,7 +12,11 @@ import cn.zhiskey.sfs.utils.config.ConfigUtil;
  */
 public class Test {
     public static void main(String[] args) {
-        ConfigUtil.getInstance().load("configs/configTest.properties");
+        try {
+            ConfigUtil.getInstance().load("configs/configTest.properties");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         System.out.println(ConfigUtil.getInstance().get("a"));
         System.out.println(ConfigUtil.getInstance().get("b"));
         ConfigUtil.getInstance().set("b", "1");

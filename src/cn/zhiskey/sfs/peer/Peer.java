@@ -55,24 +55,24 @@ public class Peer {
     }
 
     private void initPeer() {
-        Document document;
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
-            String path = "data/" + ConfigUtil.getInstance().get("peerDataPath");
-            File file = new File(path);
-
-            // 判断数据文件是否存在
-            if(file.exists()) {
-                // 解析xml文件
-                document = builder.parse(file);
-            } else {
-                document = builder.newDocument();
-            }
-        } catch (SAXException | ParserConfigurationException | IOException e) {
-            e.printStackTrace();
-        }
+//        Document document;
+//        try {
+//            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+//            DocumentBuilder builder = factory.newDocumentBuilder();
+//
+//            String path = "data/" + ConfigUtil.getInstance().get("peerDataPath");
+//            File file = new File(path);
+//
+//            // 判断数据文件是否存在
+//            if(file.exists()) {
+//                // 解析xml文件
+//                document = builder.parse(file);
+//            } else {
+//                document = builder.newDocument();
+//            }
+//        } catch (SAXException | ParserConfigurationException | IOException e) {
+//            e.printStackTrace();
+//        }
 
         Node node = document.getDocumentElement();
         System.out.println(node.getAttributes().getNamedItem("hashID").getNodeValue());
@@ -80,7 +80,11 @@ public class Peer {
 
     public static void main(String[] args) {
         // 载入配置文件
-        ConfigUtil.getInstance().load("configs/config.properties");
+        try {
+            ConfigUtil.getInstance().load("configs/config.properties");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         Peer peer = new Peer();
         peer.joinNetWork("");
