@@ -1,11 +1,13 @@
-package cn.zhiskey.sfs.utils.xml;
+package cn.zhiskey.sfs.utils;
 
+import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -24,21 +26,31 @@ public class XMLUtil {
     /**
      * 解析XML文件，获得document对象
      *
-     * @param path XML文件路径
+     * @param file XML文件file对象
      * @return org.w3c.dom.Document 解析得到的document对象
-     * @throws IOException 当文件IO异常时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public static Document parse(String path) throws IOException {
+    public static Document parse(File file) {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
-            File file = new File(path);
             return db.parse(file);
-        } catch (SAXException | ParserConfigurationException e) {
+        } catch (SAXException | ParserConfigurationException | IOException e) {
             e.printStackTrace();
+            System.exit(-1);
         }
         return null;
+    }
+
+    /**
+     * 解析XML文件，获得document对象
+     *
+     * @param path XML文件路径
+     * @return org.w3c.dom.Document 解析得到的document对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static Document parse(String path){
+        return parse(new File(path));
     }
 
     /**
@@ -46,19 +58,20 @@ public class XMLUtil {
      *
      * @param document 要保存的document对象
      * @param target 要保存到的目标文件
-     * @throws IOException 当文件IO异常时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public static void save(Document document, File target) throws IOException {
-        FileOutputStream fos = new FileOutputStream(target);
+    public static void save(Document document, File target){
         try {
+            FileOutputStream fos = new FileOutputStream(target);
             TransformerFactory tff = TransformerFactory.newInstance();
             Transformer tf = tff.newTransformer();
+            tf.setOutputProperty(OutputKeys.ENCODING, ConfigUtil.getInstance().get("xmlEncoding"));
+            tf.setOutputProperty(OutputKeys.INDENT, "yes");
             tf.transform(new DOMSource(document), new StreamResult(fos));
-        } catch (TransformerException e) {
+            fos.close();
+        } catch (TransformerException | IOException e) {
             e.printStackTrace();
         }
-        fos.close();
     }
 
     /**
@@ -66,10 +79,9 @@ public class XMLUtil {
      *
      * @param document 要保存的document对象
      * @param path 要保存到的目标文件路径
-     * @throws IOException 当文件IO异常时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public static void save(Document document, String path) throws IOException  {
+    public static void save(Document document, String path){
         save(document, new File(path));
     }
 
@@ -86,6 +98,7 @@ public class XMLUtil {
             return db.newDocument();
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
+            System.exit(-1);
         }
         return null;
     }
