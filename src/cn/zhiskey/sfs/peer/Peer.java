@@ -2,15 +2,9 @@ package cn.zhiskey.sfs.peer;
 
 import cn.zhiskey.sfs.utils.HashUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
+import cn.zhiskey.sfs.utils.xml.XMLUtil;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -73,9 +67,20 @@ public class Peer {
 //        } catch (SAXException | ParserConfigurationException | IOException e) {
 //            e.printStackTrace();
 //        }
-
-        Node node = document.getDocumentElement();
-        System.out.println(node.getAttributes().getNamedItem("hashID").getNodeValue());
+        String path = "data/" + ConfigUtil.getInstance().get("peerDataPath");
+        try {
+            Document document = XMLUtil.parse(path);
+            if(document != null) {
+                System.out.println(xmlObject.node.getNodeName());
+                System.out.println(xmlObject.node.getBaseURI());
+                System.out.println(xmlObject.node.getLocalName());
+                System.out.println(xmlObject.node.getFirstChild().getNodeType());
+                System.out.println(xmlObject.node.getFirstChild().getNodeValue().trim());
+                System.out.println(xmlObject.node.getAttributes().getNamedItem("hashID").getNodeValue());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

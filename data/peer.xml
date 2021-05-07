@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<peer hashID="123">
-
+<peer hashID="123" value="456">
+    789
 </peer>
