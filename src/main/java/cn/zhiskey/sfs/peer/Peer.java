@@ -2,11 +2,11 @@ package cn.zhiskey.sfs.peer;
 
 import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.network.RouteList;
-import cn.zhiskey.sfs.utils.HashIDUtil;
-import cn.zhiskey.sfs.utils.HashUtil;
+import cn.zhiskey.sfs.utils.FileUtil;
+import cn.zhiskey.sfs.utils.hash.HashIDUtil;
+import cn.zhiskey.sfs.utils.hash.HashUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.XMLUtil;
-import cn.zhiskey.sfs.utils.udpsocket.Recvable;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import org.w3c.dom.Document;
@@ -60,7 +60,7 @@ public class Peer {
         return HashUtil.getHash(seed.toString(), hashType);
     }
 
-    private void joinNetWork(String seedPeerHost) {
+    private void joinNetWork(String seedPeerHost, String seedPeerHashID) {
         initPeer();
 
         // 初始化路由表 TODO
@@ -73,6 +73,9 @@ public class Peer {
         }).start();
 
         if(!seedPeerHost.equals("null")) {
+            // 将种子节点加入路由表
+            byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(seedPeerHashID);
+            routeList.add(new Route(seedPeerHashIDBytes, seedPeerHost));
             // 通知种子节点自己加入
             UDPSocket.send(seedPeerHost, UDPSocket.getCommonRecvPort(), "add"+Base64.getEncoder().encodeToString(hashID));
         }
@@ -85,13 +88,19 @@ public class Peer {
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     private void initPeer() {
-        String path = ConfigUtil.getInstance().get("peerDataPath");
+        String path = FileUtil.getResourcesPath() + ConfigUtil.getInstance().get("peerDataPath");
         File peerXMLFile = new File(path);
         Document document;
         if(peerXMLFile.exists()) {
             document = XMLUtil.parse(peerXMLFile);
             initPeerData(document);
         } else {
+            if(!peerXMLFile.getParentFile().exists()) {
+                boolean mkdirsRes = peerXMLFile.getParentFile().mkdirs();
+                if(!mkdirsRes) {
+                    new IOException("Can not create data folder!").printStackTrace();
+                }
+            }
             document = XMLUtil.create();
             newPeer(document, peerXMLFile);
         }
@@ -117,7 +126,7 @@ public class Peer {
     public static void main(String[] args) {
         // 载入配置文件
         try {
-            ConfigUtil.getInstance().load("configs/config.properties");
+            ConfigUtil.getInstance().load(FileUtil.getResourcesPath() + "configs/config.properties");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -125,6 +134,6 @@ public class Peer {
         Scanner scanner = new Scanner((System.in));
 
         Peer peer = new Peer();
-        peer.joinNetWork(scanner.next());
+        peer.joinNetWork("", "");
     }
 }

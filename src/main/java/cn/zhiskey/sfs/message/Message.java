@@ -5,6 +5,6 @@ package cn.zhiskey.sfs.message;
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
-public interface Message {
-    String toMsgString();
+public abstract class Message {
+    abstract String toMsgString();
 }

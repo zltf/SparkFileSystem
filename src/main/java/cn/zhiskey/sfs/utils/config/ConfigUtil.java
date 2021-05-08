@@ -1,5 +1,6 @@
 package cn.zhiskey.sfs.utils.config;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,9 +24,9 @@ public enum ConfigUtil {
     private Properties properties = null;
 
     /**
-     * 默认的配置文件路径
+     * 默认的配置文件
      */
-    private String path = null;
+    private File file = null;
 
     /**
      * 返回配置信息管理工具实例<br>
@@ -39,6 +40,21 @@ public enum ConfigUtil {
     }
 
     /**
+     * 加载指定配置文件
+     *
+     * @param file 配置文件对象
+     * @throws IOException 当文件IO异常时
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public void load(File file) throws IOException {
+        this.file = file;
+        properties = new Properties();
+        FileInputStream inputStream = new FileInputStream(file);
+        properties.load(inputStream);
+        inputStream.close();
+    }
+
+    /**
      * 加载指定路径配置文件
      *
      * @param path 配置文件路径
@@ -46,25 +62,21 @@ public enum ConfigUtil {
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public void load(String path) throws IOException {
-        this.path = path;
-        properties = new Properties();
-        FileInputStream inputStream = new FileInputStream(this.path);
-        properties.load(inputStream);
-        inputStream.close();
+        load(new File(path));
     }
 
     /**
-     * 保存配置信息至指定配置文件，需要解释
+     * 保存配置信息至指定配置文件，需要注释
      *
-     * @param path 配置文件路径
+     * @param file 配置文件对象
      * @param comments 配置文件解释，取null值表示无解释
      * @throws ConfigFileNotLoadException 当properties文件未成功加载时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public void store(String path, String comments) throws ConfigFileNotLoadException {
+    public void store(File file, String comments) throws ConfigFileNotLoadException {
         if(properties != null) {
             try {
-                FileOutputStream outputStream = new FileOutputStream(path);
+                FileOutputStream outputStream = new FileOutputStream(file);
                 properties.store(outputStream, comments);
                 outputStream.close();
             } catch (IOException e) {
@@ -76,16 +88,28 @@ public enum ConfigUtil {
     }
 
     /**
-     * 保存配置信息至加载路径的配置文件，需要解释
+     * 保存配置信息至指定配置文件，需要注释
      *
+     * @param path 配置文件路径
      * @param comments 配置文件解释，取null值表示无解释
+     * @throws ConfigFileNotLoadException 当properties文件未成功加载时
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public void store(String path, String comments) throws ConfigFileNotLoadException {
+        store(new File(path), comments);
+    }
+
+    /**
+     * 保存配置信息至加载路径的配置文件，需要注释
+     *
+     * @param comments 配置文件解释，取null值表示无注释
      * @throws ConfigFileNotLoadException 当properties文件未成功加载时
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public void store(String comments) throws ConfigFileNotLoadException {
         // path为null，properties一定为null
         if(properties != null) {
-            store(path, comments);
+            store(file, comments);
         } else {
             throw new ConfigFileNotLoadException();
         }

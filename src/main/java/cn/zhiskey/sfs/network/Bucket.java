@@ -1,6 +1,6 @@
 package cn.zhiskey.sfs.network;
 
-import cn.zhiskey.sfs.utils.HashIDUtil;
+import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 
 import java.util.HashMap;
 import java.util.Map;

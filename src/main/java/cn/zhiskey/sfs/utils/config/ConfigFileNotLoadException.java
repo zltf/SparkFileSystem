@@ -14,6 +14,6 @@ public class ConfigFileNotLoadException extends RuntimeException {
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public ConfigFileNotLoadException(){
-        super("Please call ConfigUtil.INSTANCE.load(path) to load properties file");
+        super("Please call ConfigUtil.getInstance().load(path) to load properties file!");
     }
 }

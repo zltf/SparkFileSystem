@@ -1,4 +1,4 @@
-package cn.zhiskey.sfs.utils;
+package cn.zhiskey.sfs.utils.hash;
 
 /**
  * TODO: description

@@ -1,7 +1,6 @@
-package cn.zhiskey.sfs.utils;
+package cn.zhiskey.sfs.utils.hash;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
@@ -19,12 +18,11 @@ public class HashUtil {
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static byte[] getHash(byte[] bytes, String hashType) {
-        MessageDigest messageDigest;
+        MessageDigestExtend messageDigestExtend;
         byte[] res = null;
         try {
-            messageDigest = MessageDigest.getInstance(hashType);
-            messageDigest.update(bytes);
-            res = messageDigest.digest();
+            messageDigestExtend = new MessageDigestExtend(hashType);
+            res = messageDigestExtend.digest(bytes);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
