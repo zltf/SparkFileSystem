@@ -1,14 +1,14 @@
 package cn.zhiskey.sfs.peer;
 
-import cn.zhiskey.sfs.network.Route;
+import cn.zhiskey.sfs.message.FindNodeMsg;
 import cn.zhiskey.sfs.network.RouteList;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import cn.zhiskey.sfs.utils.hash.HashUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.XMLUtil;
-import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
-import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -66,19 +66,26 @@ public class Peer {
         // 初始化路由表 TODO
         routeList = new RouteList();
 
-        // 启动消息接收循环 TODO
-        new UDPRecvLoopThread(UDPSocket.getCommonRecvPort(), datagramPacket -> {
-            System.out.println();
-            System.out.println();
-        }).start();
+        FindNodeMsg findNodeMsg = new FindNodeMsg(Base64.getEncoder().encodeToString(hashID), "localhost");
+        String data = findNodeMsg.toJSONString();
+        System.out.println(data);
+        FindNodeMsg msg = (FindNodeMsg) JSON.parseObject(data);
+        System.out.println(msg.getType());
 
-        if(!seedPeerHost.equals("null")) {
-            // 将种子节点加入路由表
-            byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(seedPeerHashID);
-            routeList.add(new Route(seedPeerHashIDBytes, seedPeerHost));
-            // 通知种子节点自己加入
-            UDPSocket.send(seedPeerHost, UDPSocket.getCommonRecvPort(), "add"+Base64.getEncoder().encodeToString(hashID));
-        }
+//        // 启动消息接收循环 TODO
+//        new UDPRecvLoopThread(UDPSocket.getCommonRecvPort(), datagramPacket -> {
+//
+//        }).start();
+//
+//        if(!seedPeerHost.equals("null")) {
+//            // 将种子节点加入路由表
+//            byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(seedPeerHashID);
+//            routeList.add(new Route(seedPeerHashIDBytes, seedPeerHost));
+//            // 通知种子节点自己加入
+//            FindNodeMsg findNodeMsg = new FindNodeMsg(Base64.getEncoder().encodeToString(hashID), "localhost");
+//            String msgStr = JSON.toJSONString(findNodeMsg);
+//            UDPSocket.send(seedPeerHost, UDPSocket.getCommonRecvPort(), msgStr);
+//        }
     }
 
     /**
@@ -91,13 +98,13 @@ public class Peer {
         String path = FileUtil.getResourcesPath() + ConfigUtil.getInstance().get("peerDataPath");
         File peerXMLFile = new File(path);
         Document document;
-        if(peerXMLFile.exists()) {
+        if (peerXMLFile.exists()) {
             document = XMLUtil.parse(peerXMLFile);
             initPeerData(document);
         } else {
-            if(!peerXMLFile.getParentFile().exists()) {
+            if (!peerXMLFile.getParentFile().exists()) {
                 boolean mkdirsRes = peerXMLFile.getParentFile().mkdirs();
-                if(!mkdirsRes) {
+                if (!mkdirsRes) {
                     new IOException("Can not create data folder!").printStackTrace();
                 }
             }
