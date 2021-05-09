@@ -1,12 +1,15 @@
 package cn.zhiskey.sfs.peer;
 
-import cn.zhiskey.sfs.message.FindNodeMsg;
+import cn.zhiskey.sfs.message.Message;
+import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.network.RouteList;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import cn.zhiskey.sfs.utils.hash.HashUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.XMLUtil;
+import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
+import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.w3c.dom.Document;
@@ -66,26 +69,35 @@ public class Peer {
         // 初始化路由表 TODO
         routeList = new RouteList();
 
-        FindNodeMsg findNodeMsg = new FindNodeMsg(Base64.getEncoder().encodeToString(hashID), "localhost");
-        String data = findNodeMsg.toJSONString();
-        System.out.println(data);
-        FindNodeMsg msg = (FindNodeMsg) JSON.parseObject(data);
-        System.out.println(msg.getType());
+//        Message msg = new Message("FIND_NODE");
+//        msg.put("hashID", Base64.getEncoder().encodeToString(hashID));
+//        msg.put("host", "localhost");
+//
+//        String data = msg.toJSONString();
+//        System.out.println(data);
+//        Message msg1 = Message.parseByJSON(data);
+//        System.out.println(msg1.getType());
+//        String res = msg1.getString("abc");
+//        String res1 = (String) msg1.get("host");
+//        System.out.println(res);
+//        System.out.println(res1);
 
-//        // 启动消息接收循环 TODO
-//        new UDPRecvLoopThread(UDPSocket.getCommonRecvPort(), datagramPacket -> {
-//
-//        }).start();
-//
-//        if(!seedPeerHost.equals("null")) {
-//            // 将种子节点加入路由表
-//            byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(seedPeerHashID);
-//            routeList.add(new Route(seedPeerHashIDBytes, seedPeerHost));
-//            // 通知种子节点自己加入
-//            FindNodeMsg findNodeMsg = new FindNodeMsg(Base64.getEncoder().encodeToString(hashID), "localhost");
-//            String msgStr = JSON.toJSONString(findNodeMsg);
-//            UDPSocket.send(seedPeerHost, UDPSocket.getCommonRecvPort(), msgStr);
-//        }
+        // 启动消息接收循环 TODO
+        new UDPRecvLoopThread(UDPSocket.getCommonRecvPort(), datagramPacket -> {
+            Message msg = UDPRecvLoopThread.getMessage(datagramPacket);
+            System.out.println(msg.getType());
+            System.out.println(datagramPacket.getAddress());
+        }).start();
+
+        if(!seedPeerHost.equals("null")) {
+            // 将种子节点加入路由表
+            byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(seedPeerHashID);
+            routeList.add(new Route(seedPeerHashIDBytes, seedPeerHost));
+            // 通知种子节点自己加入
+            Message msg = new Message("FIND_NODE");
+            msg.put("hashID", Base64.getEncoder().encodeToString(hashID));
+            UDPSocket.send(seedPeerHost, UDPSocket.getCommonRecvPort(), msg);
+        }
     }
 
     /**
@@ -141,6 +153,6 @@ public class Peer {
         Scanner scanner = new Scanner((System.in));
 
         Peer peer = new Peer();
-        peer.joinNetWork("", "");
+        peer.joinNetWork("localhost", "");
     }
 }

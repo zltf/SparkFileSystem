@@ -1,5 +1,6 @@
 package cn.zhiskey.sfs.utils.udpsocket;
 
+import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 
 import java.io.IOException;
@@ -13,18 +14,6 @@ import java.util.List;
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class UDPSocket {
-    /**
-     * UDP发送字符串消息
-     *
-     * @param host 目的主机
-     * @param port 目的端口
-     * @param str 待发送的消息
-     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
-     */
-    public static void send(String host, int port, String str) {
-        send(host, port, str.getBytes());
-    }
-
     /**
      * UDP发送字节数组消息
      *
@@ -47,6 +36,30 @@ public class UDPSocket {
     }
 
     /**
+     * UDP发送字符串消息
+     *
+     * @param host 目的主机
+     * @param port 目的端口
+     * @param str 待发送的消息
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static void send(String host, int port, String str) {
+        send(host, port, str.getBytes());
+    }
+
+    /**
+     * UDP发送消息对象
+     *
+     * @param host 目的主机
+     * @param port 目的端口
+     * @param msg 待发送的消息对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static void send(String host, int port, Message msg) {
+        send(host, port, msg.toJSONString().getBytes());
+    }
+
+    /**
      * UDP本地广播字符串消息
      *
      * @param port 目的端口
@@ -58,6 +71,17 @@ public class UDPSocket {
         if (broadcastIP != null) {
             send("192.168.1.255", port, str);
         }
+    }
+
+    /**
+     * UDP本地广播消息对象
+     *
+     * @param port 目的端口
+     * @param msg 待发送的消息对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static void broadcast(int port, Message msg) {
+        broadcast(port, msg.toJSONString());
     }
 
     /**

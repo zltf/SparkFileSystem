@@ -1,5 +1,7 @@
 package cn.zhiskey.sfs.utils.udpsocket;
 
+import cn.zhiskey.sfs.message.Message;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -102,6 +104,18 @@ public class UDPRecvLoopThread extends Thread {
     public static String getDataString(DatagramPacket datagramPacket) {
         return new String(datagramPacket.getData(), datagramPacket.getOffset(),
                 datagramPacket.getOffset() + datagramPacket.getLength());
+    }
+
+    /**
+     * 从datagramPacket对象中获取消息对象
+     *
+     * @param datagramPacket datagramPacket对象
+     * @return cn.zhiskey.sfs.message.Message 消息对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static Message getMessage(DatagramPacket datagramPacket) {
+        return Message.parseByJSON(new String(datagramPacket.getData(), datagramPacket.getOffset(),
+                datagramPacket.getOffset() + datagramPacket.getLength()));
     }
 
     public int getBuffSize() {
