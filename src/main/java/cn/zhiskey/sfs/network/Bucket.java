@@ -3,6 +3,8 @@ package cn.zhiskey.sfs.network;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -12,19 +14,24 @@ import java.util.Map;
  */
 public class Bucket {
     private int distance;
-    Map<String, Route> routeMap;
+    private Map<String, Route> routeMap;
 
     public Bucket(int distance) {
         this.distance = distance;
-        routeMap = new HashMap<>();
+        // 使用Hashtable，线程安全
+        routeMap = new Hashtable<>();
     }
 
     public void add(Route route) {
         routeMap.put(route.getHashIDString(), route);
     }
 
+    public void remove(String hashID) {
+        routeMap.remove(hashID);
+    }
+
     public void remove(Route route) {
-        routeMap.remove(route.getHashIDString());
+        remove(route.getHashIDString());
     }
 
     public int size() {
@@ -33,18 +40,24 @@ public class Bucket {
 
     public Bucket splitSelf() {
         Bucket newBucket = new Bucket(distance+1);
-        // 遍历HashMap中的route，寻找距离过大的节点
-        for(Map.Entry<String, Route> routeEntry : routeMap.entrySet()) {
-            Route route = routeEntry.getValue();
+        // 迭代器遍历HashMap中的route，寻找距离过大的节点
+        Iterator<String> iterator = routeMap.keySet().iterator();
+        while (iterator.hasNext()) {
+            Route route = routeMap.get(iterator.next());
             int dis = HashIDUtil.getInstance().distance(route.getHashID());
             if(dis != distance) {
                 // 添加到新桶
                 newBucket.add(route);
                 // 从旧桶移除
-                remove(route);
+                iterator.remove();
             }
         }
         return newBucket;
+    }
+
+    public void lose() {
+        // TODO 查找存储最多的节点丢弃
+
     }
 
     public int getDistance() {
@@ -55,4 +68,15 @@ public class Bucket {
         this.distance = distance;
     }
 
+    public Map<String, Route> getRouteMap() {
+        return routeMap;
+    }
+
+    @Override
+    public String toString() {
+        return "Bucket{" +
+                "distance=" + distance +
+                ", routeMap=" + routeMap +
+                '}';
+    }
 }

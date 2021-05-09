@@ -1,5 +1,7 @@
 package cn.zhiskey.sfs.utils.hash;
 
+import java.util.Base64;
+
 /**
  * TODO: description
  *
@@ -41,5 +43,17 @@ public enum  HashIDUtil {
             res += 8;
         }
         return res;
+    }
+
+    /**
+     * 计算自己的HashID和指定的HashID的距离<br>
+     * 此处的距离指异或后最长二进制公共前缀的长度
+     *
+     * @param hashID 指定的HashID字符串
+     * @return int 计算出的距离
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public int distance(String hashID) {
+        return distance(Base64.getDecoder().decode(hashID));
     }
 }

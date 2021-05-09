@@ -60,6 +60,17 @@ public class UDPSocket {
     }
 
     /**
+     * UDP发送消息对象，目的端口为配置文件中指定的通用接收端口
+     *
+     * @param host 目的主机
+     * @param msg 待发送的消息对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static void send(String host, Message msg) {
+        send(host, getCommonRecvPort(), msg.toJSONString().getBytes());
+    }
+
+    /**
      * UDP本地广播字符串消息
      *
      * @param port 目的端口

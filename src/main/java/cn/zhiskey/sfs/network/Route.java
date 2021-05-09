@@ -1,5 +1,9 @@
 package cn.zhiskey.sfs.network;
 
+import cn.zhiskey.sfs.utils.hash.HashIDUtil;
+import cn.zhiskey.sfs.utils.hash.HashUtil;
+
+import java.util.Arrays;
 import java.util.Base64;
 
 /**
@@ -26,5 +30,13 @@ public class Route {
 
     public String getHashIDString() {
         return Base64.getEncoder().encodeToString(hashID);
+    }
+
+    @Override
+    public String toString() {
+        return "Route{" +
+                "hashID=" + Base64.getEncoder().encodeToString(hashID) +
+                ", host='" + host + '\'' +
+                '}';
     }
 }

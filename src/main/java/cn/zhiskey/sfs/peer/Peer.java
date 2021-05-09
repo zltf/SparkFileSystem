@@ -1,23 +1,21 @@
 package cn.zhiskey.sfs.peer;
 
 import cn.zhiskey.sfs.message.Message;
-import cn.zhiskey.sfs.network.Route;
+import cn.zhiskey.sfs.message.MessageHandler;
 import cn.zhiskey.sfs.network.RouteList;
 import cn.zhiskey.sfs.utils.FileUtil;
+import cn.zhiskey.sfs.utils.MacUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import cn.zhiskey.sfs.utils.hash.HashUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.XMLUtil;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.*;
 import java.util.Base64;
 import java.util.Random;
 import java.util.Scanner;
@@ -33,6 +31,8 @@ public class Peer {
 
     private RouteList routeList;
 
+    private PeerStatus status = PeerStatus.START;
+
     /**
      * 生成一个随机的HashID<br>
      * 基于时间戳、MAC地址、随机数生成
@@ -40,7 +40,7 @@ public class Peer {
      * @return byte[] 生成对HashID
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    private byte[] createHashID() {
+    public static byte[] createHashID() {
         StringBuilder seed = new StringBuilder();
 
         // 时间戳
@@ -48,12 +48,7 @@ public class Peer {
         seed.append(timeStamp);
 
         // MAC地址
-        try {
-            byte[] mac = NetworkInterface.getByInetAddress(InetAddress.getLocalHost()).getHardwareAddress();
-            seed.append(HashUtil.bytes2Hex(mac));
-        } catch (SocketException | UnknownHostException e) {
-            e.printStackTrace();
-        }
+        seed.append(MacUtil.getMacId());
 
         // 随机数
         seed.append(new Random().nextInt());
@@ -63,40 +58,31 @@ public class Peer {
         return HashUtil.getHash(seed.toString(), hashType);
     }
 
-    private void joinNetWork(String seedPeerHost, String seedPeerHashID) {
+    /**
+     * 将节点加入网络，需要提供种子节点<br>
+     * 会尝试与种子节点通信，并获取种子节点的hashID
+     *
+     * @param seedPeerHost 种子节点Host，第一个节点传入："null"
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    private void joinNetWork(String seedPeerHost) {
         initPeer();
 
-        // 初始化路由表 TODO
+        // 初始化路由表
         routeList = new RouteList();
 
-//        Message msg = new Message("FIND_NODE");
-//        msg.put("hashID", Base64.getEncoder().encodeToString(hashID));
-//        msg.put("host", "localhost");
-//
-//        String data = msg.toJSONString();
-//        System.out.println(data);
-//        Message msg1 = Message.parseByJSON(data);
-//        System.out.println(msg1.getType());
-//        String res = msg1.getString("abc");
-//        String res1 = (String) msg1.get("host");
-//        System.out.println(res);
-//        System.out.println(res1);
-
-        // 启动消息接收循环 TODO
+        // 启动消息接收循环
         new UDPRecvLoopThread(UDPSocket.getCommonRecvPort(), datagramPacket -> {
-            Message msg = UDPRecvLoopThread.getMessage(datagramPacket);
-            System.out.println(msg.getType());
-            System.out.println(datagramPacket.getAddress());
+            MessageHandler messageHandler = new MessageHandler(this);
+            messageHandler.handle(datagramPacket);
         }).start();
 
+        // 网络中第一个节点无种子节点，不进入以下代码块
         if(!seedPeerHost.equals("null")) {
-            // 将种子节点加入路由表
-            byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(seedPeerHashID);
-            routeList.add(new Route(seedPeerHashIDBytes, seedPeerHost));
-            // 通知种子节点自己加入
-            Message msg = new Message("FIND_NODE");
-            msg.put("hashID", Base64.getEncoder().encodeToString(hashID));
-            UDPSocket.send(seedPeerHost, UDPSocket.getCommonRecvPort(), msg);
+            // 获取种子节点hashID
+            Message msg = new Message("GetHashID");
+            UDPSocket.send(seedPeerHost, msg);
+            status = PeerStatus.WAIT_SEED_HASH_ID;
         }
     }
 
@@ -114,14 +100,7 @@ public class Peer {
             document = XMLUtil.parse(peerXMLFile);
             initPeerData(document);
         } else {
-            if (!peerXMLFile.getParentFile().exists()) {
-                boolean mkdirsRes = peerXMLFile.getParentFile().mkdirs();
-                if (!mkdirsRes) {
-                    new IOException("Can not create data folder!").printStackTrace();
-                }
-            }
-            document = XMLUtil.create();
-            newPeer(document, peerXMLFile);
+            newPeer();
         }
         // 设置自己的hashID，方便后面计算距离
         HashIDUtil.getInstance().setSelfHashID(hashID);
@@ -132,14 +111,52 @@ public class Peer {
         hashID = Base64.getDecoder().decode(elementPeer.getAttribute("hashID"));
     }
 
-    private void newPeer(Document document, File peerXMLFile) {
+    private void newPeer() {
         hashID = createHashID();
+    }
+
+    public void close() {
+        if (status == PeerStatus.RUNNING) {
+            saveData();
+        }
+    }
+
+    // TODO
+    private void saveData() {
+        String path = FileUtil.getResourcesPath() + ConfigUtil.getInstance().get("peerDataPath");
+        File peerXMLFile = new File(path);
+        if (!peerXMLFile.getParentFile().exists()) {
+            boolean mkdirsRes = peerXMLFile.getParentFile().mkdirs();
+            if (!mkdirsRes) {
+                new IOException("Can not create data folder!").printStackTrace();
+            }
+        }
+        Document document = XMLUtil.create();
 
         Element elementPeer = document.createElement("peer");
+
+        // 存储hashID
         elementPeer.setAttribute("hashID", Base64.getEncoder().encodeToString(hashID));
         document.appendChild(elementPeer);
 
+        // 保存
         XMLUtil.save(document, peerXMLFile);
+    }
+
+    public byte[] getHashID() {
+        return hashID;
+    }
+
+    public RouteList getRouteList() {
+        return routeList;
+    }
+
+    public PeerStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(PeerStatus status) {
+        this.status = status;
     }
 
     public static void main(String[] args) {
@@ -153,6 +170,6 @@ public class Peer {
         Scanner scanner = new Scanner((System.in));
 
         Peer peer = new Peer();
-        peer.joinNetWork("localhost", "");
+        peer.joinNetWork(scanner.next());
     }
 }
