@@ -1,5 +1,8 @@
 package cn.zhiskey.sfs.utils.hash;
 
+import cn.zhiskey.sfs.utils.config.ConfigUtil;
+
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
@@ -55,5 +58,28 @@ public enum  HashIDUtil {
      */
     public int distance(String hashID) {
         return distance(Base64.getDecoder().decode(hashID));
+    }
+
+    /**
+     * 计算字节数组的HashID
+     *
+     * @param bytes 待计算HashID的字节数组
+     * @return byte[] 得到的HashID值的字节数组
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static byte[] getHashID(byte[] bytes) {
+        String hashType = ConfigUtil.getInstance().get("hashType", "SHA-256");
+        return HashUtil.getHash(bytes, hashType);
+    }
+
+    /**
+     * 计算字符串的HashID
+     *
+     * @param str 待计算HashID的字符串
+     * @return byte[] 得到的HashID值的字节数组
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static byte[] getHashID(String str) {
+        return getHashID(str.getBytes());
     }
 }

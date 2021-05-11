@@ -1,5 +1,6 @@
 package cn.zhiskey.sfs.peer;
 
+import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.config.ConfigFileNotLoadException;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
@@ -14,7 +15,6 @@ import java.io.IOException;
  */
 public class Test {
     public static void main(String[] args) {
-        File file = new File("D:/QQ==");
-        System.out.println(file.exists());
+//        System.out.println(FileUtil.getFileByteSize("3Mb"));
     }
 }

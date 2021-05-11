@@ -13,7 +13,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -32,62 +31,59 @@ public class MessageHandler {
     }
 
     public void handle(DatagramPacket datagramPacket) {
-        byte[] res = datagramPacket.getData();
-        // 文件hashID的长度
-        int hashIDSize = Integer.parseInt(ConfigUtil.getInstance().get("hashIDSize"));
-        // 文件长度byte[]位数
-        int fileLengthSize = BytesUtil.INT_BYTES_SIZE;
-
-        byte[] hashID = new byte[hashIDSize];
-        System.arraycopy(res, 0, hashID, 0, hashIDSize);
-
-        byte[] fileLengthBytes = new byte[fileLengthSize];
-        System.arraycopy(res, hashIDSize, fileLengthBytes, 0, fileLengthSize);
-
-        int fileLength = BytesUtil.bytes2Int(fileLengthBytes);
-        byte[] fileBytes = new byte[fileLength];
-        System.arraycopy(res, hashIDSize + fileLengthSize, fileBytes, 0, fileLength);
-
-        String hashIDStr = Base64.getEncoder().encodeToString(hashID);
-        String filePath = ConfigUtil.getInstance().get("fileFragmentsPath");
-        filePath += filePath.charAt(filePath.length()-1) == '/' ? hashIDStr : '/' + hashIDStr;
-
-        File file = new File(filePath);
-        if (!file.getParentFile().exists()) {
-            boolean mkdirsRes = file.getParentFile().mkdirs();
-            if (!mkdirsRes) {
-                new IOException("Can not create file fragments folder!").printStackTrace();
-            }
-        }
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            fileOutputStream.write(fileBytes);
-            fileOutputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println(Base64.getEncoder().encodeToString(hashID));
-        System.out.println(fileLength);
-
-//        Message msg = UDPRecvLoopThread.getMessage(datagramPacket);
-//        String fromHost = datagramPacket.getAddress().getHostAddress();
-//        switch (msg.getType()) {
-//            case "GetHashID":
-//                getHashID(fromHost);
-//                break;
-//            case "ResGetHashID":
-//                resGetHashID(msg, fromHost);
-//                break;
-//            case "SearchNode":
-//                searchNode(msg, fromHost);
-//                break;
-//            case "ResSearchNode":
-//                resSearchNode(msg);
-//                break;
-//            default:
-//                break;
+//        byte[] res = datagramPacket.getData();
+//        // 文件hashID的长度
+//        int hashIDSize = Integer.parseInt(ConfigUtil.getInstance().get("hashIDSize"));
+//        // 文件长度byte[]位数
+//        int fileLengthSize = BytesUtil.INT_BYTES_SIZE;
+//
+//        byte[] hashID = new byte[hashIDSize];
+//        System.arraycopy(res, 0, hashID, 0, hashIDSize);
+//
+//        byte[] fileLengthBytes = new byte[fileLengthSize];
+//        System.arraycopy(res, hashIDSize, fileLengthBytes, 0, fileLengthSize);
+//
+//        int fileLength = BytesUtil.bytes2Int(fileLengthBytes);
+//        byte[] fileBytes = new byte[fileLength];
+//        System.arraycopy(res, hashIDSize + fileLengthSize, fileBytes, 0, fileLength);
+//
+//        String hashIDStr = Base64.getEncoder().encodeToString(hashID);
+//        String filePath = ConfigUtil.getInstance().get("SparkFolder");
+//        filePath += filePath.charAt(filePath.length()-1) == '/' ? hashIDStr : '/' + hashIDStr;
+//        filePath += ConfigUtil.getInstance().get("SparkFileExtension");
+//
+//        File file = new File(filePath);
+//        FileUtil.makeParentFolder(file);
+//        try {
+//            FileOutputStream fos = new FileOutputStream(file);
+//            fos.write(fileBytes);
+//            fos.flush();
+//            fos.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
 //        }
+//
+//        System.out.println(Base64.getEncoder().encodeToString(hashID));
+//        System.out.println(fileLength);
+
+        Message msg = UDPRecvLoopThread.getMessage(datagramPacket);
+        String fromHost = datagramPacket.getAddress().getHostAddress();
+        switch (msg.getType()) {
+            case "GetHashID":
+                getHashID(fromHost);
+                break;
+            case "ResGetHashID":
+                resGetHashID(msg, fromHost);
+                break;
+            case "SearchNode":
+                searchNode(msg, fromHost);
+                break;
+            case "ResSearchNode":
+                resSearchNode(msg);
+                break;
+            default:
+                break;
+        }
     }
 
     private void getHashID(String fromHost) {

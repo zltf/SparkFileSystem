@@ -38,7 +38,7 @@ public class HashUtil {
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static byte[] getHash(String str, String hashType) {
-        return getHash(str.getBytes(StandardCharsets.UTF_8), hashType);
+        return getHash(str.getBytes(), hashType);
     }
 
     /**

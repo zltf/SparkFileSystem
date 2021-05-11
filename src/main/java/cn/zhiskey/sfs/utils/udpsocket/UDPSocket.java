@@ -90,6 +90,9 @@ public class UDPSocket {
         if(!file.exists()) {
             throw new FileNotFoundException(file.getAbsolutePath());
         }
+        String fileName = file.getName();
+        // 去掉文件后缀名
+        fileName = fileName.substring(0, ConfigUtil.getInstance().get("SparkFileExtension").length());
         // 文件hashID的长度
         int hashIDSize = Integer.parseInt(ConfigUtil.getInstance().get("hashIDSize"));
         // 文件长度byte[]位数
@@ -97,7 +100,7 @@ public class UDPSocket {
         // 文件长度
         int fileLength = (int) file.length();
         // 文件名就是文件的hashID的Base64编码结果
-        byte[] hashIDBytes = Base64.getDecoder().decode(file.getName());
+        byte[] hashIDBytes = Base64.getDecoder().decode(fileName);
         // 文件长度字节数组
         byte[] fileLengthBytes = BytesUtil.int2Bytes(fileLength);
         // 要发送的字节数组
@@ -109,8 +112,8 @@ public class UDPSocket {
         // 写文件的起始位置
         int staPos = hashIDSize + fileLengthSize;
         // 将文件内容写入发送数组
-        FileInputStream inputStream = new FileInputStream(file);
-        System.arraycopy(inputStream.readAllBytes(), 0, sendBytes, staPos, fileLength);
+        FileInputStream fis = new FileInputStream(file);
+        System.arraycopy(fis.readAllBytes(), 0, sendBytes, staPos, fileLength);
         send(host, port, sendBytes);
     }
 

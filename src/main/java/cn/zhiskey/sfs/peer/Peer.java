@@ -54,8 +54,7 @@ public class Peer {
         seed.append(new Random().nextInt());
 
         // 生成哈希ID
-        String hashType = ConfigUtil.getInstance().get("hashType", "SHA-256");
-        return HashUtil.getHash(seed.toString(), hashType);
+        return HashIDUtil.getHashID(seed.toString());
     }
 
     /**
@@ -77,19 +76,19 @@ public class Peer {
             messageHandler.handle(datagramPacket);
         }).start();
 
-        try {
-            UDPSocket.send("localhost", UDPSocket.getCommonRecvPort(), new File("D:/QQ=="));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-//
-//        // 网络中第一个节点无种子节点，不进入以下代码块
-//        if(!seedPeerHost.equals("null")) {
-//            // 获取种子节点hashID
-//            Message msg = new Message("GetHashID");
-//            UDPSocket.send(seedPeerHost, msg);
-//            status = PeerStatus.WAIT_SEED_HASH_ID;
+//        try {
+//            UDPSocket.send("localhost", UDPSocket.getCommonRecvPort(), new File("D:/QQ=="));
+//        } catch (IOException e) {
+//            e.printStackTrace();
 //        }
+
+        // 网络中第一个节点无种子节点，不进入以下代码块
+        if(!seedPeerHost.equals("null")) {
+            // 获取种子节点hashID
+            Message msg = new Message("GetHashID");
+            UDPSocket.send(seedPeerHost, msg);
+            status = PeerStatus.WAIT_SEED_HASH_ID;
+        }
     }
 
     /**
@@ -132,12 +131,7 @@ public class Peer {
     private void saveData() {
         String path = FileUtil.getResourcesPath() + ConfigUtil.getInstance().get("peerDataPath");
         File peerXMLFile = new File(path);
-        if (!peerXMLFile.getParentFile().exists()) {
-            boolean mkdirsRes = peerXMLFile.getParentFile().mkdirs();
-            if (!mkdirsRes) {
-                new IOException("Can not create data folder!").printStackTrace();
-            }
-        }
+        FileUtil.makeParentFolder(peerXMLFile);
         Document document = XMLUtil.create();
 
         Element elementPeer = document.createElement("peer");
