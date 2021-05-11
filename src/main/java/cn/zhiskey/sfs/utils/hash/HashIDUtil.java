@@ -24,17 +24,18 @@ public enum  HashIDUtil {
     }
 
     /**
-     * 计算自己的HashID和指定的HashID的距离<br>
+     * 计算两个HashID的距离<br>
      * 此处的距离指异或后最长二进制公共前缀的长度
      *
-     * @param hashID 指定的HashID
+     * @param hashID1 指定的HashID1
+     * @param hashID2 指定的HashID2
      * @return int 计算出的距离
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public int distance(byte[] hashID) {
+    public static int distance(byte[] hashID1, byte[] hashID2) {
         int res = 0;
-        for(int i=0; i<hashID.length; i++) {
-            byte tmp = (byte) (selfHashID[i] ^ hashID[i]);
+        for(int i=0; i<hashID1.length; i++) {
+            byte tmp = (byte) (hashID1[i] ^ hashID2[i]);
             // 已找到最长前缀
             if(tmp != 0) {
                 while(tmp == tmp<<1>>>1) {
@@ -46,6 +47,31 @@ public enum  HashIDUtil {
             res += 8;
         }
         return res;
+    }
+
+    /**
+     * 计算自己的HashID和指定的HashID的距离<br>
+     * 此处的距离指异或后最长二进制公共前缀的长度
+     *
+     * @param hashID 指定的HashID
+     * @return int 计算出的距离
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public int distance(byte[] hashID) {
+        return distance(selfHashID, hashID);
+    }
+
+    /**
+     * 计算两个HashID的距离<br>
+     * 此处的距离指异或后最长二进制公共前缀的长度
+     *
+     * @param hashID1 指定的HashID1字符串
+     * @param hashID2 指定的HashID2字符串
+     * @return int 计算出的距离
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static int distance(String hashID1, String hashID2) {
+        return distance(Base64.getDecoder().decode(hashID1), Base64.getDecoder().decode(hashID2));
     }
 
     /**

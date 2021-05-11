@@ -92,7 +92,7 @@ public class UDPSocket {
         }
         String fileName = file.getName();
         // 去掉文件后缀名
-        fileName = fileName.substring(0, ConfigUtil.getInstance().get("SparkFileExtension").length());
+        fileName = fileName.substring(0, fileName.length() - ConfigUtil.getInstance().get("SparkFileExtension").length() - 1);
         // 文件hashID的长度
         int hashIDSize = Integer.parseInt(ConfigUtil.getInstance().get("hashIDSize"));
         // 文件长度byte[]位数

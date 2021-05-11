@@ -50,7 +50,7 @@ public class MessageHandler {
 //        String hashIDStr = Base64.getEncoder().encodeToString(hashID);
 //        String filePath = ConfigUtil.getInstance().get("SparkFolder");
 //        filePath += filePath.charAt(filePath.length()-1) == '/' ? hashIDStr : '/' + hashIDStr;
-//        filePath += ConfigUtil.getInstance().get("SparkFileExtension");
+//        filePath += '.' + ConfigUtil.getInstance().get("SparkFileExtension");
 //
 //        File file = new File(filePath);
 //        FileUtil.makeParentFolder(file);

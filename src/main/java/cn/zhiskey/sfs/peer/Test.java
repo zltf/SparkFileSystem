@@ -7,6 +7,7 @@ import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * 测试模块功能
@@ -16,5 +17,19 @@ import java.io.IOException;
 public class Test {
     public static void main(String[] args) {
 //        System.out.println(FileUtil.getFileByteSize("3Mb"));
+        // 载入配置文件
+        try {
+            ConfigUtil.getInstance().load(FileUtil.getResourcesPath() + "configs/config.properties");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            List<String> list = FileUtil.makeSpark(new File("D:/apache-maven-3.8.1-bin.zip"));
+            for (String s : list) {
+                System.out.println(s);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

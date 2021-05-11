@@ -36,7 +36,7 @@ public class FileUtil {
         }
     }
 
-    public static byte[] makeSpark(File file) throws IOException {
+    public static List<String> makeSpark(File file) throws IOException {
         List<String> sparksHashIDList = new ArrayList<>();
         String fileHashID = "";
 
@@ -55,7 +55,10 @@ public class FileUtil {
         }
         fis.close();
 
-        return newSeedSparkFile(fileHashID, file.getName(), file.length(), sparksHashIDList);
+        newSeedSparkFile(fileHashID, file.getName(), file.length(), sparksHashIDList);
+
+        sparksHashIDList.add(0, fileHashID);
+        return sparksHashIDList;
     }
 
     private static void newSparkFile(String hashID, byte[] fileFragment) {
@@ -70,12 +73,20 @@ public class FileUtil {
         }
     }
 
-    private static byte[] newSeedSparkFile(String fileHashID, String fileName, long fileLength,List<String> sparksHashIDList) {
+    private static void newSeedSparkFile(String fileHashID, String fileName, long fileLength,List<String> sparksHashIDList) {
         File file = getTempSparkFile(fileHashID);
         try {
             FileWriter fileWriter = new FileWriter(file);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-            bufferedWriter.write();
+            bufferedWriter.write(fileName);
+            bufferedWriter.newLine();
+            bufferedWriter.write(String.valueOf(fileLength));
+            bufferedWriter.newLine();
+            for (String hashID : sparksHashIDList) {
+                bufferedWriter.write(hashID);
+                bufferedWriter.newLine();
+            }
+
             bufferedWriter.flush();
             bufferedWriter.close();
         } catch (IOException e) {
@@ -86,7 +97,7 @@ public class FileUtil {
     private static File getTempSparkFile(String hashID) {
         String filePath = ConfigUtil.getInstance().get("TempSparkFolder");
         filePath += filePath.charAt(filePath.length()-1) == '/' ? hashID : '/' + hashID;
-        filePath += ConfigUtil.getInstance().get("SparkFileExtension");
+        filePath += '.' + ConfigUtil.getInstance().get("SparkFileExtension");
         File file = new File(filePath);
         makeParentFolder(file);
         return new File(filePath);
