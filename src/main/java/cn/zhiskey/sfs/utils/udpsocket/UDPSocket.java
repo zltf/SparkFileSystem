@@ -1,10 +1,16 @@
 package cn.zhiskey.sfs.utils.udpsocket;
 
 import cn.zhiskey.sfs.message.Message;
+import cn.zhiskey.sfs.utils.BytesUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -67,7 +73,45 @@ public class UDPSocket {
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static void send(String host, Message msg) {
-        send(host, getCommonRecvPort(), msg.toJSONString().getBytes());
+        send(host, getCommonRecvPort(), msg);
+    }
+
+    /**
+     * UDP发送文件
+     * TODO: 分段发送
+     *
+     * @param host 目的主机
+     * @param port 目的端口
+     * @param file 待发送的文件
+     * @throws IOException 发送的文件不存在时，或IO操作异常时
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static void send(String host, int port, File file) throws IOException {
+        if(!file.exists()) {
+            throw new FileNotFoundException(file.getAbsolutePath());
+        }
+        // 文件hashID的长度
+        int hashIDSize = Integer.parseInt(ConfigUtil.getInstance().get("hashIDSize"));
+        // 文件长度byte[]位数
+        int fileLengthSize = BytesUtil.INT_BYTES_SIZE;
+        // 文件长度
+        int fileLength = (int) file.length();
+        // 文件名就是文件的hashID的Base64编码结果
+        byte[] hashIDBytes = Base64.getDecoder().decode(file.getName());
+        // 文件长度字节数组
+        byte[] fileLengthBytes = BytesUtil.int2Bytes(fileLength);
+        // 要发送的字节数组
+        byte[] sendBytes = new byte[hashIDSize + fileLengthSize + fileLength];
+        // 复制hashID到发送数组
+        System.arraycopy(hashIDBytes, 0, sendBytes, 0, hashIDSize);
+        // 文件长度字节数组到发送数组
+        System.arraycopy(fileLengthBytes, 0, sendBytes, hashIDSize, fileLengthSize);
+        // 写文件的起始位置
+        int staPos = hashIDSize + fileLengthSize;
+        // 将文件内容写入发送数组
+        FileInputStream inputStream = new FileInputStream(file);
+        System.arraycopy(inputStream.readAllBytes(), 0, sendBytes, staPos, fileLength);
+        send(host, port, sendBytes);
     }
 
     /**
@@ -132,6 +176,6 @@ public class UDPSocket {
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static int getCommonRecvPort() {
-        return Integer.valueOf(ConfigUtil.getInstance().get("commonRecvPort"));
+        return Integer.parseInt(ConfigUtil.getInstance().get("commonRecvPort"));
     }
 }

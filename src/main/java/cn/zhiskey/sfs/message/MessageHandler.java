@@ -4,6 +4,7 @@ import cn.zhiskey.sfs.network.Bucket;
 import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.peer.Peer;
 import cn.zhiskey.sfs.peer.PeerStatus;
+import cn.zhiskey.sfs.utils.BytesUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
@@ -11,6 +12,10 @@ import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.*;
 
@@ -27,24 +32,62 @@ public class MessageHandler {
     }
 
     public void handle(DatagramPacket datagramPacket) {
-        Message msg = UDPRecvLoopThread.getMessage(datagramPacket);
-        String fromHost = datagramPacket.getAddress().getHostAddress();
-        switch (msg.getType()) {
-            case "GetHashID":
-                getHashID(fromHost);
-                break;
-            case "ResGetHashID":
-                resGetHashID(msg, fromHost);
-                break;
-            case "SearchNode":
-                searchNode(msg, fromHost);
-                break;
-            case "ResSearchNode":
-                resSearchNode(msg);
-                break;
-            default:
-                break;
+        byte[] res = datagramPacket.getData();
+        // 文件hashID的长度
+        int hashIDSize = Integer.parseInt(ConfigUtil.getInstance().get("hashIDSize"));
+        // 文件长度byte[]位数
+        int fileLengthSize = BytesUtil.INT_BYTES_SIZE;
+
+        byte[] hashID = new byte[hashIDSize];
+        System.arraycopy(res, 0, hashID, 0, hashIDSize);
+
+        byte[] fileLengthBytes = new byte[fileLengthSize];
+        System.arraycopy(res, hashIDSize, fileLengthBytes, 0, fileLengthSize);
+
+        int fileLength = BytesUtil.bytes2Int(fileLengthBytes);
+        byte[] fileBytes = new byte[fileLength];
+        System.arraycopy(res, hashIDSize + fileLengthSize, fileBytes, 0, fileLength);
+
+        String hashIDStr = Base64.getEncoder().encodeToString(hashID);
+        String filePath = ConfigUtil.getInstance().get("fileFragmentsPath");
+        filePath += filePath.charAt(filePath.length()-1) == '/' ? hashIDStr : '/' + hashIDStr;
+
+        File file = new File(filePath);
+        if (!file.getParentFile().exists()) {
+            boolean mkdirsRes = file.getParentFile().mkdirs();
+            if (!mkdirsRes) {
+                new IOException("Can not create file fragments folder!").printStackTrace();
+            }
         }
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            fileOutputStream.write(fileBytes);
+            fileOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(Base64.getEncoder().encodeToString(hashID));
+        System.out.println(fileLength);
+
+//        Message msg = UDPRecvLoopThread.getMessage(datagramPacket);
+//        String fromHost = datagramPacket.getAddress().getHostAddress();
+//        switch (msg.getType()) {
+//            case "GetHashID":
+//                getHashID(fromHost);
+//                break;
+//            case "ResGetHashID":
+//                resGetHashID(msg, fromHost);
+//                break;
+//            case "SearchNode":
+//                searchNode(msg, fromHost);
+//                break;
+//            case "ResSearchNode":
+//                resSearchNode(msg);
+//                break;
+//            default:
+//                break;
+//        }
     }
 
     private void getHashID(String fromHost) {
@@ -114,7 +157,7 @@ public class MessageHandler {
             byte[] hashID = Base64.getDecoder().decode(hashIDStr);
             String host = peerObj.getString("host");
 
-            // 如果路由表没有该路由
+            // 如果路由表没有该路由，防止消息风暴
             if(!peer.getRouteList().containsRoute(hashIDStr)) {
                 peer.getRouteList().add(new Route(hashID, host));
                 // 通知返回的节点将自己加入网络
@@ -145,81 +188,3 @@ public class MessageHandler {
         }
     }
 }
-
-/*
-RouteList{
-    list=[
-        Bucket{
-            distance=0,
-            routeMap={
-                sw===Route{
-                    hashID=sw==,
-                    host='host:1'
-                },
-                iQ===Route{
-                    hashID=iQ==,
-                    host='host:2'
-                },
-                5g===Route{
-                    hashID=5g==,
-                    host='host:0'
-                }
-            }
-        },
-        Bucket{
-            distance=1,
-            routeMap={}
-        },
-        Bucket{
-            distance=2,
-            routeMap={}
-        },
-        Bucket{
-            distance=3,
-            routeMap={}
-        },
-        Bucket{
-            distance=4,
-            routeMap={}
-        },
-        Bucket{
-            distance=5,
-            routeMap={}
-        },
-        Bucket{
-            distance=6,
-            routeMap={}
-        },
-        Bucket{
-            distance=7,
-            routeMap={}
-        },
-        Bucket{
-            distance=8,
-            routeMap={
-                UA===Route{
-                    hashID=UA==,
-                    host='127.0.0.1'
-                }
-            }
-        },
-        Bucket{
-            distance=9,
-            routeMap={
-                8g===Route{
-                    hashID=8g==,
-                    host='host:4'
-                },
-                kA===Route{
-                    hashID=kA==,
-                    host='host:3'
-                },
-                nw===Route{
-                    hashID=nw==,
-                    host='host:5'
-                }
-            }
-        }
-    ],
-    curBucket=Bucket{distance=9, routeMap={8g===Route{hashID=8g==, host='host:4'}, kA===Route{hashID=kA==, host='host:3'}, nw===Route{hashID=nw==, host='host:5'}}}}
- */

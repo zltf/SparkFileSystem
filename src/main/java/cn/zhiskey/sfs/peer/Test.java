@@ -4,6 +4,7 @@ import cn.zhiskey.sfs.utils.config.ConfigFileNotLoadException;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -13,17 +14,7 @@ import java.io.IOException;
  */
 public class Test {
     public static void main(String[] args) {
-//        try {
-//            ConfigUtil.getInstance().load("configs/configTest.properties");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        System.out.println(ConfigUtil.getInstance().get("a"));
-//        System.out.println(ConfigUtil.getInstance().get("b"));
-//        ConfigUtil.getInstance().set("b", "1");
-//        System.out.println(ConfigUtil.getInstance().get("b"));
-//        ConfigUtil.getInstance().store("Configs");
-        new UDPRecvLoopThread(54321,
-                datagramPacket -> System.out.println(UDPRecvLoopThread.getDataString(datagramPacket))).start();
+        File file = new File("D:/QQ==");
+        System.out.println(file.exists());
     }
 }

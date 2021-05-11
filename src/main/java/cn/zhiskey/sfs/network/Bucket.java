@@ -55,10 +55,13 @@ public class Bucket {
         return newBucket;
     }
 
-    public void lose() {
-        // TODO 查找存储最多的节点丢弃
-
-    }
+    /**
+     * 查找存储最多的节点丢弃<br>
+     * TODO: 暂缓完成
+     *
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public void lose() {}
 
     public int getDistance() {
         return distance;

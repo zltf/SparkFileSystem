@@ -21,7 +21,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 /**
- * P2P节点类 TODO
+ * P2P节点类 TODO: 描述
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
@@ -77,13 +77,19 @@ public class Peer {
             messageHandler.handle(datagramPacket);
         }).start();
 
-        // 网络中第一个节点无种子节点，不进入以下代码块
-        if(!seedPeerHost.equals("null")) {
-            // 获取种子节点hashID
-            Message msg = new Message("GetHashID");
-            UDPSocket.send(seedPeerHost, msg);
-            status = PeerStatus.WAIT_SEED_HASH_ID;
+        try {
+            UDPSocket.send("localhost", UDPSocket.getCommonRecvPort(), new File("D:/QQ=="));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+//
+//        // 网络中第一个节点无种子节点，不进入以下代码块
+//        if(!seedPeerHost.equals("null")) {
+//            // 获取种子节点hashID
+//            Message msg = new Message("GetHashID");
+//            UDPSocket.send(seedPeerHost, msg);
+//            status = PeerStatus.WAIT_SEED_HASH_ID;
+//        }
     }
 
     /**
@@ -106,6 +112,7 @@ public class Peer {
         HashIDUtil.getInstance().setSelfHashID(hashID);
     }
 
+    // TODO: 其他属性
     private void initPeerData(Document document) {
         Element elementPeer = document.getDocumentElement();
         hashID = Base64.getDecoder().decode(elementPeer.getAttribute("hashID"));
@@ -121,7 +128,7 @@ public class Peer {
         }
     }
 
-    // TODO
+    // TODO: 其他属性
     private void saveData() {
         String path = FileUtil.getResourcesPath() + ConfigUtil.getInstance().get("peerDataPath");
         File peerXMLFile = new File(path);
