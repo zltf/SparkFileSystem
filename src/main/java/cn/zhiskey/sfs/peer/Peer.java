@@ -13,12 +13,12 @@ import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * P2P节点类 TODO: 描述
@@ -29,7 +29,9 @@ public class Peer {
 
     private byte[] hashID = null;
 
-    private RouteList routeList;
+    private RouteList routeList = new RouteList();
+
+    private List<String> sparkFileList = new ArrayList<>();
 
     private PeerStatus status = PeerStatus.START;
 
@@ -40,7 +42,7 @@ public class Peer {
      * @return byte[] 生成对HashID
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public static byte[] createHashID() {
+    private static byte[] createHashID() {
         StringBuilder seed = new StringBuilder();
 
         // 时间戳
@@ -64,11 +66,8 @@ public class Peer {
      * @param seedPeerHost 种子节点Host，第一个节点传入："null"
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    private void joinNetWork(String seedPeerHost) {
+    public void joinNetWork(String seedPeerHost) {
         initPeer();
-
-        // 初始化路由表
-        routeList = new RouteList();
 
         // 启动消息接收循环
         new UDPRecvLoopThread(UDPSocket.getCommonRecvPort(), datagramPacket -> {
@@ -91,6 +90,17 @@ public class Peer {
         }
     }
 
+    public void makeSpark(String filePath) {
+        List<String> list;
+        try {
+            list = FileUtil.makeSpark(new File(filePath));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // 向网络中节点发送spark
+
+    }
+
     /**
      * 初始化节点<br>
      * 从XML文件读出节点数据或是新建一个节点
@@ -111,10 +121,18 @@ public class Peer {
         HashIDUtil.getInstance().setSelfHashID(hashID);
     }
 
-    // TODO: 其他属性
     private void initPeerData(Document document) {
         Element elementPeer = document.getDocumentElement();
         hashID = Base64.getDecoder().decode(elementPeer.getAttribute("hashID"));
+        // 读取spark列表
+        NodeList nodeListSparks = elementPeer.getElementsByTagName("sparks");
+        for (int i = 0; i < nodeListSparks.getLength(); i++) {
+            NodeList nodeListSpark = ((Element)nodeListSparks.item(i)).getElementsByTagName("spark");
+            for (int j = 0; j < nodeListSpark.getLength(); j++) {
+                sparkFileList.add(nodeListSpark.item(j).getTextContent());
+                System.out.println(nodeListSpark.item(j).getTextContent());
+            }
+        }
     }
 
     private void newPeer() {
@@ -127,7 +145,6 @@ public class Peer {
         }
     }
 
-    // TODO: 其他属性
     private void saveData() {
         String path = FileUtil.getResourcesPath() + ConfigUtil.getInstance().get("peerDataPath");
         File peerXMLFile = new File(path);
@@ -139,6 +156,15 @@ public class Peer {
         // 存储hashID
         elementPeer.setAttribute("hashID", Base64.getEncoder().encodeToString(hashID));
         document.appendChild(elementPeer);
+
+        // 存储spark列表
+        Element elementSparks = document.createElement("sparks");
+        for (String sparkFileHashID : sparkFileList) {
+            Element elementSpark = document.createElement("spark");
+            elementSpark.setTextContent(sparkFileHashID);
+            elementSparks.appendChild(elementSpark);
+        }
+        elementPeer.appendChild(elementSparks);
 
         // 保存
         XMLUtil.save(document, peerXMLFile);

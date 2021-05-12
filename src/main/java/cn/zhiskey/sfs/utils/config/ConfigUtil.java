@@ -30,7 +30,7 @@ public enum ConfigUtil {
 
     /**
      * 返回配置信息管理工具实例<br>
-     * 兼容传统的单例模式实力获取方式
+     * 兼容传统的单例模式实例获取方式
      *
      * @return cn.zhiskey.sfs.utils.config.ConfigUtil 配置信息管理工具实例
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>

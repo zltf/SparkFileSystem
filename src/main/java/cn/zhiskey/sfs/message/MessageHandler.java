@@ -93,7 +93,7 @@ public class MessageHandler {
     }
 
     private void resGetHashID(Message msg, String fromHost) {
-        if(peer.getStatus() == peer.getStatus()) {
+        if(peer.getStatus() == PeerStatus.WAIT_SEED_HASH_ID) {
             System.out.println("已和种子节点取得通信");
 
             // 将种子节点加入路由表
