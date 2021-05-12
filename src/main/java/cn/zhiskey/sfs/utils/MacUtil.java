@@ -9,14 +9,14 @@ import java.util.Enumeration;
  * 获取MAC地址的工具类<br>
  * 支持Windows Linux Unix等操作系统
  *
- * @author  zhangyang33@sinopharm.com
+ * @author zhangyang33@sinopharm.com
  */
 public class MacUtil {
     /**
      * 获得服务器的MAC地址
      *
      * @return java.lang.String MAC地址
-     * @author  zhangyang33@sinopharm.com
+     * @author zhangyang33@sinopharm.com
      */
     public static String getMacId() {
         String macId = "";
@@ -63,7 +63,7 @@ public class MacUtil {
      *
      * @param bytes byte数组
      * @return java.lang.String MAC地址
-     * @author  zhangyang33@sinopharm.com
+     * @author zhangyang33@sinopharm.com
      */
     private static String getMacFromBytes(byte[] bytes) {
         StringBuilder mac = new StringBuilder();

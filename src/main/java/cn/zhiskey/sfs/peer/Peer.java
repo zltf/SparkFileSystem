@@ -2,6 +2,8 @@ package cn.zhiskey.sfs.peer;
 
 import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.message.MessageHandler;
+import cn.zhiskey.sfs.message.TempRouteRes;
+import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.network.RouteList;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.MacUtil;
@@ -117,7 +119,7 @@ public class Peer {
         } else {
             newPeer();
         }
-        // 设置自己的hashID，方便后面计算距离
+        // 设置自己的hashID，方便后面计算前缀长
         HashIDUtil.getInstance().setSelfHashID(hashID);
     }
 
@@ -130,7 +132,6 @@ public class Peer {
             NodeList nodeListSpark = ((Element)nodeListSparks.item(i)).getElementsByTagName("spark");
             for (int j = 0; j < nodeListSpark.getLength(); j++) {
                 sparkFileList.add(nodeListSpark.item(j).getTextContent());
-                System.out.println(nodeListSpark.item(j).getTextContent());
             }
         }
     }
@@ -198,5 +199,13 @@ public class Peer {
 
         Peer peer = new Peer();
         peer.joinNetWork(scanner.next());
+
+        while (true) {
+            Message msg = new Message("SearchNode");
+            msg.put("count", Integer.parseInt(ConfigUtil.getInstance().get("findPeerCount")));
+            msg.put("hashID", scanner.next());
+            msg.put("searchType", "nearSpark");
+            UDPSocket.send("localhost", msg);
+        }
     }
 }

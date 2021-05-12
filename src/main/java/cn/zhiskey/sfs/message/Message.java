@@ -19,7 +19,7 @@ public class Message {
     }
 
     private Message(JSONObject jsonObject) {
-        if(jsonObject.get("type") != null) {
+        if(jsonObject.containsKey("type")) {
             this.jsonObject = jsonObject;
         } else {
             new Exception("A message instance mast has key \"type\"").printStackTrace();

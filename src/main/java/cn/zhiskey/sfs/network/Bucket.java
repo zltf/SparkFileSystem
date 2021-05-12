@@ -13,11 +13,11 @@ import java.util.Map;
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class Bucket {
-    private int distance;
+    private int cpl;
     private Map<String, Route> routeMap;
 
-    public Bucket(int distance) {
-        this.distance = distance;
+    public Bucket(int cpl) {
+        this.cpl = cpl;
         // 使用Hashtable，线程安全
         routeMap = new Hashtable<>();
     }
@@ -39,13 +39,13 @@ public class Bucket {
     }
 
     public Bucket splitSelf() {
-        Bucket newBucket = new Bucket(distance+1);
-        // 迭代器遍历HashMap中的route，寻找距离过大的节点
+        Bucket newBucket = new Bucket(cpl+1);
+        // 迭代器遍历HashMap中的route，寻找前缀长较大的节点
         Iterator<String> iterator = routeMap.keySet().iterator();
         while (iterator.hasNext()) {
             Route route = routeMap.get(iterator.next());
-            int dis = HashIDUtil.getInstance().distance(route.getHashID());
-            if(dis != distance) {
+            int dis = HashIDUtil.getInstance().cpl(route.getHashID());
+            if(dis != cpl) {
                 // 添加到新桶
                 newBucket.add(route);
                 // 从旧桶移除
@@ -63,12 +63,12 @@ public class Bucket {
      */
     public void lose() {}
 
-    public int getDistance() {
-        return distance;
+    public int getCpl() {
+        return cpl;
     }
 
-    public void setDistance(int distance) {
-        this.distance = distance;
+    public void setCpl(int cpl) {
+        this.cpl = cpl;
     }
 
     public Map<String, Route> getRouteMap() {
@@ -78,7 +78,7 @@ public class Bucket {
     @Override
     public String toString() {
         return "Bucket{" +
-                "distance=" + distance +
+                "cpl=" + cpl +
                 ", routeMap=" + routeMap +
                 '}';
     }

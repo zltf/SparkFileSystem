@@ -2,7 +2,6 @@ package cn.zhiskey.sfs.utils;
 
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
-import cn.zhiskey.sfs.utils.hash.HashUtil;
 
 import java.io.*;
 import java.net.URL;
@@ -41,7 +40,7 @@ public class FileUtil {
         String fileHashID = "";
 
         FileInputStream fis = new FileInputStream(file);
-        int sparkFileSize = getFileByteSize(ConfigUtil.getInstance().get("SparkFileSize"));
+        int sparkFileSize = getFileByteSize(ConfigUtil.getInstance().get("sparkFileSize"));
         byte[] fileFragment = new byte[sparkFileSize];
         while ((fis.read(fileFragment))!=-1){
             // 将文件分片hashID加入hashID列表
@@ -95,9 +94,9 @@ public class FileUtil {
     }
 
     private static File getTempSparkFile(String hashID) {
-        String filePath = ConfigUtil.getInstance().get("TempSparkFolder");
+        String filePath = ConfigUtil.getInstance().get("tempSparkFolder");
         filePath += filePath.charAt(filePath.length()-1) == '/' ? hashID : '/' + hashID;
-        filePath += '.' + ConfigUtil.getInstance().get("SparkFileExtension");
+        filePath += '.' + ConfigUtil.getInstance().get("sparkFileExtension");
         File file = new File(filePath);
         makeParentFolder(file);
         return new File(filePath);

@@ -69,15 +69,29 @@ public class MessageHandler {
         Message msg = UDPRecvLoopThread.getMessage(datagramPacket);
         String fromHost = datagramPacket.getAddress().getHostAddress();
         switch (msg.getType()) {
+            // 获取hashID
+            // 无参数
             case "GetHashID":
                 getHashID(fromHost);
                 break;
+            // 获取hashID响应
+            // hashID
             case "ResGetHashID":
                 resGetHashID(msg, fromHost);
                 break;
+            // 搜索最近节点
+            // count 返回数量
+            // hashID
+            // searchType 搜索类型：research再次搜索（构建路由表）、nearer更近节点（找spark文件）
             case "SearchNode":
                 searchNode(msg, fromHost);
                 break;
+            // 搜做最近节点响应
+            // peers
+            //     hashID
+            //     host
+            // searchType 搜索类型：research再次搜索（构建路由表）、nearSpark和是spark更近的节点（找spark文件）
+            // toHashID 搜索的hashID
             case "ResSearchNode":
                 resSearchNode(msg);
                 break;
@@ -102,7 +116,9 @@ public class MessageHandler {
 
             // 通知种子节点将自己加入网络
             msg = new Message("SearchNode");
+            msg.put("count", Integer.parseInt(ConfigUtil.getInstance().get("findPeerCount")));
             msg.put("hashID", Base64.getEncoder().encodeToString(peer.getHashID()));
+            msg.put("searchType", "research");
             UDPSocket.send(fromHost, msg);
 
             // 设置状态为运行中
@@ -118,18 +134,12 @@ public class MessageHandler {
         peer.getRouteList().add(new Route(seedPeerHashIDBytes, fromHost));
 
         // 寻找findPeerCount个节点返回
-        int findPeerCount = Integer.parseInt(ConfigUtil.getInstance().get("findPeerCount"));
+        int findPeerCount = (int) msg.get("count");
         int bucketCount = Integer.parseInt(ConfigUtil.getInstance().get("bucketCount"));
-        int idLeft = HashIDUtil.getInstance().distance(hashID);
-        int idRight = idLeft + 1;
+        int cpl = HashIDUtil.getInstance().cpl(hashID);
         List<Route> resList = new ArrayList<>(findPeerCount);
-        while (resList.size() < findPeerCount && (idLeft >= 0 || idRight < bucketCount)) {
-            if(idLeft >= 0) {
-                iteratorSearchNode(idLeft--, resList);
-            }
-            if(idRight < bucketCount && resList.size() < findPeerCount) {
-                iteratorSearchNode(idRight++, resList);
-            }
+        while (resList.size() < findPeerCount && cpl >= 0) {
+            iteratorSearchNode(cpl--, resList);
         }
 
         // 返回结果
@@ -142,10 +152,14 @@ public class MessageHandler {
             peerArray.add(peer);
         }
         res.put("peers", peerArray);
+        // 原样返回搜索类型
+        res.put("searchType", msg.getString("searchType"));
+        res.put("toHashID", hashID);
         UDPSocket.send(fromHost, res);
     }
 
     private void resSearchNode(Message msg) {
+        List<Route> res = new ArrayList<>();
         JSONArray peerArray = (JSONArray) msg.get("peers");
         for (Object obj : peerArray) {
             JSONObject peerObj = (JSONObject) obj;
@@ -153,13 +167,64 @@ public class MessageHandler {
             byte[] hashID = Base64.getDecoder().decode(hashIDStr);
             String host = peerObj.getString("host");
 
-            // 如果路由表没有该路由，防止消息风暴
+            Route route = new Route(hashID, host);
+            // 如果路由表没有该路由才处理，防止重复路由，造成循环
             if(!peer.getRouteList().containsRoute(hashIDStr)) {
-                peer.getRouteList().add(new Route(hashID, host));
+                peer.getRouteList().add(route);
+            }
+            res.add(route);
+
+            switch (msg.getString("searchType")) {
+                case "research":
+                    research(res);
+                    break;
+                case "nearSpark":
+                    nearSpark(res, msg.getString("toHashID"));
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private void research(List<Route> routeList) {
+        for (Route route : routeList) {
+            // 如果路由表没有该路由才处理，防止重复路由，造成循环
+            if(!peer.getRouteList().containsRoute(route.getHashIDString())) {
                 // 通知返回的节点将自己加入网络
-                msg = new Message("SearchNode");
+                Message msg = new Message("SearchNode");
+                msg.put("count", Integer.parseInt(ConfigUtil.getInstance().get("findPeerCount")));
                 msg.put("hashID", Base64.getEncoder().encodeToString(peer.getHashID()));
-                UDPSocket.send(host, msg);
+                msg.put("searchType", "research");
+                UDPSocket.send(route.getHost(), msg);
+            }
+        }
+    }
+
+    private void nearSpark(List<Route> routeList, String toHashID) {
+        List<Route> routeRes = TempRouteRes.getInstance().get(toHashID);
+        // 创建新的结果列表
+        if(routeRes == null) {
+            // 线程安全的Vector
+            routeRes = new Vector<>();
+            TempRouteRes.getInstance().put(toHashID, routeRes);
+        }
+        int fileBakCount = Integer.parseInt(ConfigUtil.getInstance().get("fileBakCount"));
+        for (Route route : routeList) {
+            // 跳过已经存在的路由
+            if (routeRes.contains(route)){
+                continue;
+            }
+            if(routeRes.size() < fileBakCount) {
+                routeRes.add(route);
+            } else {
+                // 按cpl从小到大，即公共前缀从短到长
+                routeRes.sort(Comparator.comparingInt(o -> HashIDUtil.cpl(o.getHashIDString(), toHashID)));
+                // 如果遇到更近的节点，替换最远的节点
+                if(HashIDUtil.cpl(route.getHashIDString(), toHashID)
+                        > HashIDUtil.cpl(routeRes.get(0).getHashIDString(), toHashID)) {
+                    routeRes.set(0, route);
+                }
             }
         }
     }
@@ -168,13 +233,13 @@ public class MessageHandler {
      * 通过迭代器遍历桶中route加入搜索结果路由数组中，并保证结果数组大小不超过findPeerCount<br>
      * 该方法目的是减少重复代码
      *
-     * @param distance 要搜索的桶的距离
+     * @param cpl 要搜索的桶的前缀长
      * @param resList 搜索结果路由数组
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    private void iteratorSearchNode(int distance, List<Route> resList) {
+    private void iteratorSearchNode(int cpl, List<Route> resList) {
         int findPeerCount = Integer.parseInt(ConfigUtil.getInstance().get("findPeerCount"));
-        Bucket bucket = peer.getRouteList().getBucket(distance);
+        Bucket bucket = peer.getRouteList().getBucket(cpl);
         // 迭代器遍历bucket中的route
         Map<String, Route> routeMap = bucket.getRouteMap();
         Iterator<String> iterator = routeMap.keySet().iterator();

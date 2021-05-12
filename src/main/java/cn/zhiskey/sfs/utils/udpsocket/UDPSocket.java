@@ -9,10 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.*;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 
 /**
  * UDP Socket工具类
@@ -92,7 +89,7 @@ public class UDPSocket {
         }
         String fileName = file.getName();
         // 去掉文件后缀名
-        fileName = fileName.substring(0, fileName.length() - ConfigUtil.getInstance().get("SparkFileExtension").length() - 1);
+        fileName = fileName.substring(0, fileName.length() - ConfigUtil.getInstance().get("sparkFileExtension").length() - 1);
         // 文件hashID的长度
         int hashIDSize = Integer.parseInt(ConfigUtil.getInstance().get("hashIDSize"));
         // 文件长度byte[]位数
@@ -127,7 +124,7 @@ public class UDPSocket {
     public static void broadcast(int port, String str) {
         String broadcastIP = getLocalBroadcastIP();
         if (broadcastIP != null) {
-            send("192.168.1.255", port, str);
+            send(broadcastIP, port, str);
         }
     }
 

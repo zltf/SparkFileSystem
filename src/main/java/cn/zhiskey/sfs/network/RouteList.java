@@ -29,9 +29,9 @@ public class RouteList {
         if(containsRoute(route.getHashIDString())) {
             return;
         }
-        int distance = HashIDUtil.getInstance().distance(route.getHashID());
-        Bucket bucket = bucketList.get(distance);
-        bucketList.get(distance).add(route);
+        int cpl = HashIDUtil.getInstance().cpl(route.getHashID());
+        Bucket bucket = bucketList.get(cpl);
+        bucketList.get(cpl).add(route);
         int bucketSizeLimit = Integer.parseInt(ConfigUtil.getInstance().get("bucketSizeLimit"));
         if(bucket.size() > bucketSizeLimit) {
             bucket.lose();
@@ -39,18 +39,18 @@ public class RouteList {
         System.out.println(this);
     }
 
-    public void remove(int distance, String hashID) {
-        Bucket bucket =  bucketList.get(distance);
+    public void remove(int cpl, String hashID) {
+        Bucket bucket =  bucketList.get(cpl);
         bucket.remove(hashID);
     }
 
-    public Bucket getBucket(int distance) {
-        return bucketList.get(distance);
+    public Bucket getBucket(int cpl) {
+        return bucketList.get(cpl);
     }
 
     public boolean containsRoute(String hashID) {
-        int distance = HashIDUtil.getInstance().distance(hashID);
-        Bucket bucket = getBucket(distance);
+        int cpl = HashIDUtil.getInstance().cpl(hashID);
+        Bucket bucket = getBucket(cpl);
         return bucket.getRouteMap().containsKey(hashID);
     }
 

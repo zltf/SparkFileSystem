@@ -5,6 +5,7 @@ import cn.zhiskey.sfs.utils.hash.HashUtil;
 
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Objects;
 
 /**
  * TODO: description
@@ -30,6 +31,21 @@ public class Route {
 
     public String getHashIDString() {
         return Base64.getEncoder().encodeToString(hashID);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Route route = (Route) o;
+        return Arrays.equals(hashID, route.hashID) && Objects.equals(host, route.host);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(host);
+        result = 31 * result + Arrays.hashCode(hashID);
+        return result;
     }
 
     @Override

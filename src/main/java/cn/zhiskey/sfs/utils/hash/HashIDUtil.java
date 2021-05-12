@@ -24,15 +24,15 @@ public enum  HashIDUtil {
     }
 
     /**
-     * 计算两个HashID的距离<br>
-     * 此处的距离指异或后最长二进制公共前缀的长度
+     * 计算两个HashID的前缀长<br>
+     * 此处的前缀长指异或后最长二进制公共前缀的长度
      *
      * @param hashID1 指定的HashID1
      * @param hashID2 指定的HashID2
-     * @return int 计算出的距离
+     * @return int 计算出的前缀长
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public static int distance(byte[] hashID1, byte[] hashID2) {
+    public static int cpl(byte[] hashID1, byte[] hashID2) {
         int res = 0;
         for(int i=0; i<hashID1.length; i++) {
             byte tmp = (byte) (hashID1[i] ^ hashID2[i]);
@@ -50,40 +50,40 @@ public enum  HashIDUtil {
     }
 
     /**
-     * 计算自己的HashID和指定的HashID的距离<br>
-     * 此处的距离指异或后最长二进制公共前缀的长度
+     * 计算自己的HashID和指定的HashID的前缀长<br>
+     * 此处的前缀长指异或后最长二进制公共前缀的长度
      *
      * @param hashID 指定的HashID
-     * @return int 计算出的距离
+     * @return int 计算出的前缀长
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public int distance(byte[] hashID) {
-        return distance(selfHashID, hashID);
+    public int cpl(byte[] hashID) {
+        return cpl(selfHashID, hashID);
     }
 
     /**
-     * 计算两个HashID的距离<br>
-     * 此处的距离指异或后最长二进制公共前缀的长度
+     * 计算两个HashID的前缀长<br>
+     * 此处的前缀长指异或后最长二进制公共前缀的长度
      *
      * @param hashID1 指定的HashID1字符串
      * @param hashID2 指定的HashID2字符串
-     * @return int 计算出的距离
+     * @return int 计算出的前缀长
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public static int distance(String hashID1, String hashID2) {
-        return distance(Base64.getDecoder().decode(hashID1), Base64.getDecoder().decode(hashID2));
+    public static int cpl(String hashID1, String hashID2) {
+        return cpl(Base64.getDecoder().decode(hashID1), Base64.getDecoder().decode(hashID2));
     }
 
     /**
-     * 计算自己的HashID和指定的HashID的距离<br>
-     * 此处的距离指异或后最长二进制公共前缀的长度
+     * 计算自己的HashID和指定的HashID的前缀长<br>
+     * 此处的前缀长指异或后最长二进制公共前缀的长度
      *
      * @param hashID 指定的HashID字符串
-     * @return int 计算出的距离
+     * @return int 计算出的前缀长
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public int distance(String hashID) {
-        return distance(Base64.getDecoder().decode(hashID));
+    public int cpl(String hashID) {
+        return cpl(Base64.getDecoder().decode(hashID));
     }
 
     /**
