@@ -2,13 +2,14 @@ package cn.zhiskey.sfs.peer;
 
 import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.message.MessageHandler;
-import cn.zhiskey.sfs.message.TempRouteRes;
+import cn.zhiskey.sfs.message.trr.CompleteStrategy;
+import cn.zhiskey.sfs.message.trr.TempRouteRes;
+import cn.zhiskey.sfs.message.trr.TempRouteResItem;
 import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.network.RouteList;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.MacUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
-import cn.zhiskey.sfs.utils.hash.HashUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.XMLUtil;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
@@ -16,7 +17,6 @@ import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,7 +65,7 @@ public class Peer {
      * 将节点加入网络，需要提供种子节点<br>
      * 会尝试与种子节点通信，并获取种子节点的hashID
      *
-     * @param seedPeerHost 种子节点Host，第一个节点传入："null"
+     * @param seedPeerHost 种子节点Host，网络中第一个节点的种子节点是他自己：localhost
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public void joinNetWork(String seedPeerHost) {
@@ -83,13 +83,10 @@ public class Peer {
 //            e.printStackTrace();
 //        }
 
-        // 网络中第一个节点无种子节点，不进入以下代码块
-        if(!seedPeerHost.equals("null")) {
-            // 获取种子节点hashID
-            Message msg = new Message("GetHashID");
-            UDPSocket.send(seedPeerHost, msg);
-            status = PeerStatus.WAIT_SEED_HASH_ID;
-        }
+        // 获取种子节点hashID
+        Message msg = new Message("GetHashID");
+        UDPSocket.send(seedPeerHost, msg);
+        status = PeerStatus.WAIT_SEED_HASH_ID;
     }
 
     public void makeSpark(String filePath) {
@@ -201,11 +198,14 @@ public class Peer {
         peer.joinNetWork(scanner.next());
 
         while (true) {
+            String hashID = scanner.next();
             Message msg = new Message("SearchNode");
             msg.put("count", Integer.parseInt(ConfigUtil.getInstance().get("findPeerCount")));
-            msg.put("hashID", scanner.next());
+            msg.put("hashID", hashID);
             msg.put("searchType", "nearSpark");
-            UDPSocket.send("localhost", msg);
+            TempRouteRes.getInstance().put(hashID, new TempRouteResItem(
+                    res -> System.out.println("RES = " + TempRouteRes.getInstance().get(hashID))));
+            UDPSocket.send(scanner.next(), msg);
         }
     }
 }

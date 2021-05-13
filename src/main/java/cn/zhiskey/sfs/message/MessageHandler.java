@@ -1,10 +1,10 @@
 package cn.zhiskey.sfs.message;
 
+import cn.zhiskey.sfs.message.trr.TempRouteRes;
 import cn.zhiskey.sfs.network.Bucket;
 import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.peer.Peer;
 import cn.zhiskey.sfs.peer.PeerStatus;
-import cn.zhiskey.sfs.utils.BytesUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
@@ -12,9 +12,6 @@ import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.*;
 
@@ -92,6 +89,7 @@ public class MessageHandler {
             //     host
             // searchType 搜索类型：research再次搜索（构建路由表）、nearSpark和是spark更近的节点（找spark文件）
             // toHashID 搜索的hashID
+            //
             case "ResSearchNode":
                 resSearchNode(msg);
                 break;
@@ -130,8 +128,10 @@ public class MessageHandler {
         String hashID = msg.getString("hashID");
 
         // 将节点加入路由表
-        byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(hashID);
-        peer.getRouteList().add(new Route(seedPeerHashIDBytes, fromHost));
+        if(msg.getString("searchType").equals("research")) {
+            byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(hashID);
+            peer.getRouteList().add(new Route(seedPeerHashIDBytes, fromHost));
+        }
 
         // 寻找findPeerCount个节点返回
         int findPeerCount = (int) msg.get("count");
@@ -139,7 +139,7 @@ public class MessageHandler {
         int cpl = HashIDUtil.getInstance().cpl(hashID);
         List<Route> resList = new ArrayList<>(findPeerCount);
         while (resList.size() < findPeerCount && cpl >= 0) {
-            iteratorSearchNode(cpl--, resList);
+            iteratorSearchNode(cpl--, resList, hashID);
         }
 
         // 返回结果
@@ -159,6 +159,7 @@ public class MessageHandler {
     }
 
     private void resSearchNode(Message msg) {
+        System.out.println("1234");
         List<Route> res = new ArrayList<>();
         JSONArray peerArray = (JSONArray) msg.get("peers");
         for (Object obj : peerArray) {
@@ -168,22 +169,20 @@ public class MessageHandler {
             String host = peerObj.getString("host");
 
             Route route = new Route(hashID, host);
-            // 如果路由表没有该路由才处理，防止重复路由，造成循环
-            if(!peer.getRouteList().containsRoute(hashIDStr)) {
-                peer.getRouteList().add(route);
-            }
+            // 添加到路由表
+            peer.getRouteList().add(route);
+            // 添加到结果列表
             res.add(route);
-
-            switch (msg.getString("searchType")) {
-                case "research":
-                    research(res);
-                    break;
-                case "nearSpark":
-                    nearSpark(res, msg.getString("toHashID"));
-                    break;
-                default:
-                    break;
-            }
+        }
+        switch (msg.getString("searchType")) {
+            case "research":
+                research(res);
+                break;
+            case "nearSpark":
+                nearSpark(res, msg.getString("toHashID"));
+                break;
+            default:
+                break;
         }
     }
 
@@ -203,13 +202,11 @@ public class MessageHandler {
 
     private void nearSpark(List<Route> routeList, String toHashID) {
         List<Route> routeRes = TempRouteRes.getInstance().get(toHashID);
-        // 创建新的结果列表
         if(routeRes == null) {
-            // 线程安全的Vector
-            routeRes = new Vector<>();
-            TempRouteRes.getInstance().put(toHashID, routeRes);
+            return;
         }
         int fileBakCount = Integer.parseInt(ConfigUtil.getInstance().get("fileBakCount"));
+
         for (Route route : routeList) {
             // 跳过已经存在的路由
             if (routeRes.contains(route)){
@@ -217,16 +214,19 @@ public class MessageHandler {
             }
             if(routeRes.size() < fileBakCount) {
                 routeRes.add(route);
-            } else {
                 // 按cpl从小到大，即公共前缀从短到长
                 routeRes.sort(Comparator.comparingInt(o -> HashIDUtil.cpl(o.getHashIDString(), toHashID)));
-                // 如果遇到更近的节点，替换最远的节点
+            } else {
+                // 如果遇到更近的节点，替换最远的节点，公共前缀从短到长排列
                 if(HashIDUtil.cpl(route.getHashIDString(), toHashID)
                         > HashIDUtil.cpl(routeRes.get(0).getHashIDString(), toHashID)) {
                     routeRes.set(0, route);
                 }
+                // 按cpl从小到大，即公共前缀从短到长
+                routeRes.sort(Comparator.comparingInt(o -> HashIDUtil.cpl(o.getHashIDString(), toHashID)));
             }
         }
+        System.out.println(TempRouteRes.getInstance().get(toHashID));
     }
 
     /**
@@ -235,17 +235,28 @@ public class MessageHandler {
      *
      * @param cpl 要搜索的桶的前缀长
      * @param resList 搜索结果路由数组
+     * @param toHashID 搜索的源节点的hashID
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    private void iteratorSearchNode(int cpl, List<Route> resList) {
+    private void iteratorSearchNode(int cpl, List<Route> resList, String toHashID) {
         int findPeerCount = Integer.parseInt(ConfigUtil.getInstance().get("findPeerCount"));
         Bucket bucket = peer.getRouteList().getBucket(cpl);
         // 迭代器遍历bucket中的route
         Map<String, Route> routeMap = bucket.getRouteMap();
-        Iterator<String> iterator = routeMap.keySet().iterator();
-        while (iterator.hasNext() && resList.size() < findPeerCount) {
-            Route route = routeMap.get(iterator.next());
-            resList.add(route);
+        for (String key : routeMap.keySet()) {
+            Route route = routeMap.get(key);
+
+            if (resList.size() < findPeerCount) {
+                resList.add(route);
+            } else {
+                // 按cpl从小到大，即公共前缀从短到长
+                resList.sort(Comparator.comparingInt(o -> HashIDUtil.cpl(o.getHashIDString(), toHashID)));
+                // 如果遇到更近的节点，替换最远的节点，公共前缀从短到长排列
+                if (HashIDUtil.cpl(route.getHashIDString(), toHashID)
+                        > HashIDUtil.cpl(resList.get(0).getHashIDString(), toHashID)) {
+                    resList.set(0, route);
+                }
+            }
         }
     }
 }
