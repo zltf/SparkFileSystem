@@ -2,9 +2,6 @@ package cn.zhiskey.sfs.peer;
 
 import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.message.MessageHandler;
-import cn.zhiskey.sfs.message.trr.CompleteStrategy;
-import cn.zhiskey.sfs.message.trr.TempRouteRes;
-import cn.zhiskey.sfs.message.trr.TempRouteResItem;
 import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.network.RouteList;
 import cn.zhiskey.sfs.utils.FileUtil;
@@ -77,12 +74,6 @@ public class Peer {
             messageHandler.handle(datagramPacket);
         }).start();
 
-//        try {
-//            UDPSocket.send("localhost", UDPSocket.getCommonRecvPort(), new File("D:/QQ=="));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
         // 获取种子节点hashID
         Message msg = new Message("GetHashID");
         UDPSocket.send(seedPeerHost, msg);
@@ -90,14 +81,19 @@ public class Peer {
     }
 
     public void makeSpark(String filePath) {
-        List<String> list;
+        List<String> list = new ArrayList<>();
         try {
             list = FileUtil.makeSpark(new File(filePath));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        int sparkBakCount = Integer.parseInt(ConfigUtil.getInstance().get("sparkBakCount"));
         // 向网络中节点发送spark
-
+        for (String hashID : list) {
+            sparkFileList.add(hashID);
+            List<Route> resList = routeList.searchFromRouteList(hashID, sparkBakCount);
+            MessageHandler.sendSpark(resList, getHashIDString(), hashID, sparkBakCount, sparkFileList);
+        }
     }
 
     /**
@@ -172,8 +168,16 @@ public class Peer {
         return hashID;
     }
 
+    public String getHashIDString() {
+        return Base64.getEncoder().encodeToString(hashID);
+    }
+
     public RouteList getRouteList() {
         return routeList;
+    }
+
+    public List<String> getSparkFileList() {
+        return sparkFileList;
     }
 
     public PeerStatus getStatus() {
@@ -197,15 +201,11 @@ public class Peer {
         Peer peer = new Peer();
         peer.joinNetWork(scanner.next());
 
-        while (true) {
-            String hashID = scanner.next();
-            Message msg = new Message("SearchNode");
-            msg.put("count", Integer.parseInt(ConfigUtil.getInstance().get("findPeerCount")));
-            msg.put("hashID", hashID);
-            msg.put("searchType", "nearSpark");
-            TempRouteRes.getInstance().put(hashID, new TempRouteResItem(
-                    res -> System.out.println("RES = " + TempRouteRes.getInstance().get(hashID))));
-            UDPSocket.send(scanner.next(), msg);
+        String op = scanner.next();;
+        while (!op.equals("exit")) {
+            peer.makeSpark(op);
+            op = scanner.next();
         }
+        peer.close();
     }
 }

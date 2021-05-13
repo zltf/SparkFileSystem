@@ -30,7 +30,7 @@ public class FileUtil {
         if (!file.getParentFile().exists()) {
             boolean mkdirsRes = file.getParentFile().mkdirs();
             if (!mkdirsRes) {
-                new IOException("Can not create " + file.getParentFile().getAbsolutePath() + " folder!").printStackTrace();
+                new IOException("Can not create " + file.getParentFile().getAbsolutePath() + " folder").printStackTrace();
             }
         }
     }
@@ -61,7 +61,7 @@ public class FileUtil {
     }
 
     private static void newSparkFile(String hashID, byte[] fileFragment) {
-        File file = getTempSparkFile(hashID);
+        File file = getSparkFile(hashID);
         try {
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(fileFragment);
@@ -70,10 +70,11 @@ public class FileUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("new spark: " + hashID);
     }
 
     private static void newSeedSparkFile(String fileHashID, String fileName, long fileLength,List<String> sparksHashIDList) {
-        File file = getTempSparkFile(fileHashID);
+        File file = getSparkFile(fileHashID);
         try {
             FileWriter fileWriter = new FileWriter(file);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
@@ -91,15 +92,21 @@ public class FileUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("new spark: " + fileHashID);
     }
 
-    private static File getTempSparkFile(String hashID) {
-        String filePath = ConfigUtil.getInstance().get("tempSparkFolder");
+    public static String getSparkFilePath(String hashID) {
+        String filePath = ConfigUtil.getInstance().get("sparkFolder");
         filePath += filePath.charAt(filePath.length()-1) == '/' ? hashID : '/' + hashID;
         filePath += '.' + ConfigUtil.getInstance().get("sparkFileExtension");
+        return filePath;
+    }
+
+    public static File getSparkFile(String hashID) {
+        String filePath = getSparkFilePath(hashID);
         File file = new File(filePath);
         makeParentFolder(file);
-        return new File(filePath);
+        return file;
     }
 
     private static int getFileByteSize(String fileSize) {

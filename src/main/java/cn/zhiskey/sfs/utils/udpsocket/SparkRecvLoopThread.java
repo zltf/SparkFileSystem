@@ -1,0 +1,188 @@
+package cn.zhiskey.sfs.utils.udpsocket;
+
+import cn.zhiskey.sfs.network.Route;
+import cn.zhiskey.sfs.utils.BytesUtil;
+import cn.zhiskey.sfs.utils.FileUtil;
+import cn.zhiskey.sfs.utils.config.ConfigUtil;
+
+import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+import java.util.Base64;
+import java.util.List;
+
+/**
+ * TODO: description
+ *
+ * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+ */
+public class SparkRecvLoopThread extends Thread {
+    /**
+     * UDP Socket对象
+     */
+    private DatagramSocket datagramSocket = null;
+
+    /**
+     * 接收缓冲区大小<br>
+     * 单位：字节<br>
+     * 值为1024 * 63
+     */
+    public static final int BUFF_SIZE = 1024 * 63;
+
+    /**
+     * 构造方法<br>
+     * 初始化UDP Socket对象
+     *
+     * @param recvPort 接收消息的端口
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public SparkRecvLoopThread(int recvPort) {
+        // 创建Socket对象
+        try {
+            datagramSocket = new DatagramSocket(recvPort);
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            byte[] preData = new byte[BUFF_SIZE];
+            DatagramPacket datagramPacket = new DatagramPacket(preData,preData.length);
+            try {
+                datagramSocket.receive(datagramPacket);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // 文件hashID的长度
+            int hashIDSize = Integer.parseInt(ConfigUtil.getInstance().get("hashIDSize"));
+
+            byte[] data = datagramPacket.getData();
+            byte[] dataTypeBytes = new byte[BytesUtil.INT_BYTES_SIZE];
+            System.arraycopy(data, 0, dataTypeBytes, 0, BytesUtil.INT_BYTES_SIZE);
+            byte[] hashID = new byte[hashIDSize];
+            System.arraycopy(data, BytesUtil.INT_BYTES_SIZE, hashID, 0, hashIDSize);
+            byte[] fileLengthBytes = new byte[BytesUtil.INT_BYTES_SIZE];
+            System.arraycopy(data, BytesUtil.INT_BYTES_SIZE + hashIDSize,
+                    fileLengthBytes, 0, BytesUtil.INT_BYTES_SIZE);
+            SparkDataType dataType = SparkDataType.values()[BytesUtil.bytes2Int(dataTypeBytes)];
+            int fileLength = BytesUtil.bytes2Int(fileLengthBytes);
+            String hashIDStr = Base64.getEncoder().encodeToString(hashID);
+
+            switch (dataType) {
+                case PUSH_SPARK:
+                    pushSpark(fileLength, hashIDStr);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private void pushSpark(int fileLength, String hashIDStr) {
+        File file = FileUtil.getSparkFile(hashIDStr);
+        FileUtil.makeParentFolder(file);
+
+        try {
+            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+
+            // 读取文件包
+            byte[] buf = new byte[BUFF_SIZE];
+            DatagramPacket fileData = new DatagramPacket(buf, buf.length);
+            while (true) {
+                datagramSocket.receive(fileData);
+                // 如果文件发送完毕
+                if (new String(fileData.getData(), 0, fileData.getLength()).equals("fin")) {
+                    bos.close();
+                    datagramSocket.close();
+                    break;
+                }
+                bos.write(fileData.getData(), 0, fileData.getLength());
+                bos.flush();
+            }
+            bos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        datagramSocket.close();
+    }
+
+    /**
+     * 向路由列表中的各个路由发送spark文件，并且如果本节点不是离spark较近的节点，删除本地的spark文件
+     *
+     * @param routeList 路由列表
+     * @param peerHashID 本节点的hashID
+     * @param hashID spark的hashID
+     * @param count 文件存在的最大备份份数
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static void sendSpark(List<Route> routeList, String peerHashID, String hashID, int count, List<String> sparkFileList) {
+        File file = FileUtil.getSparkFile(hashID);
+        boolean selfFlag = false;
+        for (Route route : routeList) {
+            try {
+                UDPSocket.send(route.getHost(), file, SparkDataType.PUSH_SPARK);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if(route.getHashIDString().equals(peerHashID)) {
+                // 结果列表中包含节点自己
+                selfFlag = true;
+            }
+        }
+
+        // 本地的文件是多余的，删除
+        if(routeList.size() >= count && !selfFlag) {
+            boolean deleteRes = file.delete();
+            if(!deleteRes) {
+                new IOException("Can not delete file " + file.getName()).printStackTrace();
+            }
+            sparkFileList.remove(hashID);
+            System.out.println("delete spark: " + hashID);
+        }
+    }
+
+    /**
+     * 保存接收到的spark文件
+     *
+     * @param data 接收到的data数组
+     * @return java.lang.String spark的hashID
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    private String saveSpark(byte[] data) {
+        // 文件hashID的长度
+        int hashIDSize = Integer.parseInt(ConfigUtil.getInstance().get("hashIDSize"));
+        // 文件长度byte[]位数
+        int fileLengthSize = BytesUtil.INT_BYTES_SIZE;
+
+        byte[] hashID = new byte[hashIDSize];
+        System.arraycopy(data, 0, hashID, 0, hashIDSize);
+
+        byte[] fileLengthBytes = new byte[fileLengthSize];
+        System.arraycopy(data, hashIDSize, fileLengthBytes, 0, fileLengthSize);
+
+        int fileLength = BytesUtil.bytes2Int(fileLengthBytes);
+        byte[] fileBytes = new byte[fileLength];
+        System.arraycopy(data, hashIDSize + fileLengthSize, fileBytes, 0, fileLength);
+
+        // 保存接收到的spark文件
+        String hashIDStr = Base64.getEncoder().encodeToString(hashID);
+        File file = FileUtil.getSparkFile(hashIDStr);
+        FileUtil.makeParentFolder(file);
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(fileBytes);
+            fos.flush();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        peer.getSparkFileList().add(hashIDStr);
+        System.out.println("new spark: " + hashIDStr);
+        return hashIDStr;
+    }
+}
