@@ -3,6 +3,7 @@ package cn.zhiskey.sfs.utils.udpsocket;
 import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.utils.BytesUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
+import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 
 import java.io.*;
 import java.net.*;
@@ -94,8 +95,8 @@ public class UDPSocket {
         int fileLengthSize = BytesUtil.INT_BYTES_SIZE;
         // 文件长度
         int fileLength = (int) file.length();
-        // 文件名就是文件的hashID的Base64编码结果
-        byte[] hashIDBytes = Base64.getDecoder().decode(fileName);
+        // 文件名就是文件的hashID
+        byte[] hashIDBytes = HashIDUtil.toBytes(fileName);
         // 文件长度字节数组
         byte[] fileLengthBytes = BytesUtil.int2Bytes(fileLength);
         // 要发送的字节数组
@@ -116,6 +117,7 @@ public class UDPSocket {
         System.arraycopy(dataTypeBytes, 0, data, 0, BytesUtil.INT_BYTES_SIZE);
         System.arraycopy(sendBytes, 0, data, BytesUtil.INT_BYTES_SIZE, sendBytes.length);
 
+        System.out.println("send " + HashIDUtil.toString(hashIDBytes) + " " + host);
         send(host, getSparkRecvPort(), data);
     }
 
@@ -142,8 +144,8 @@ public class UDPSocket {
 //
 //        // spark文件标识码
 //        byte[] dataTypeBytes = BytesUtil.int2Bytes(dataType.ordinal());
-//        // 文件名就是文件的hashID的Base64编码结果
-//        byte[] hashIDBytes = Base64.getDecoder().decode(fileName);
+//        // 文件名就是文件的hashID
+//        byte[] hashIDBytes = HashIDUtil.toBytes(fileName);
 //        // 文件长度字节数组
 //        byte[] fileLengthBytes = BytesUtil.int2Bytes(fileLength);
 //        // 要发送的字节数组
@@ -155,7 +157,7 @@ public class UDPSocket {
 //        // 文件长度字节数组到发送数组
 //        System.arraycopy(fileLengthBytes, 0, sendBytes, BytesUtil.INT_BYTES_SIZE + hashIDSize, BytesUtil.INT_BYTES_SIZE);
 //
-//        System.out.println("send " + Base64.getEncoder().encodeToString(hashIDBytes) + " " + host);
+//        System.out.println("send " + HashIDUtil.toString(hashIDBytes) + " " + host);
 //
 //        DatagramSocket datagramSocket = new DatagramSocket();
 //        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));

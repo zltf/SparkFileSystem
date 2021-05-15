@@ -4,7 +4,6 @@ import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import cn.zhiskey.sfs.utils.hash.HashUtil;
 
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Objects;
 
 /**
@@ -30,7 +29,7 @@ public class Route {
     }
 
     public String getHashIDString() {
-        return Base64.getEncoder().encodeToString(hashID);
+        return HashIDUtil.toString(hashID);
     }
 
     @Override
@@ -55,7 +54,7 @@ public class Route {
     @Override
     public String toString() {
         return "Route{" +
-                "hashID=" + Base64.getEncoder().encodeToString(hashID) +
+                "hashID=" + HashIDUtil.toString(hashID) +
                 ", host='" + host + '\'' +
                 '}';
     }

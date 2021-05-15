@@ -5,14 +5,13 @@ import cn.zhiskey.sfs.peer.Peer;
 import cn.zhiskey.sfs.utils.BytesUtil;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
+import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 
 /**
@@ -75,11 +74,11 @@ public class SparkRecvLoopThread extends Thread {
             System.arraycopy(data, BytesUtil.INT_BYTES_SIZE + hashIDSize,
                     fileLengthBytes, 0, BytesUtil.INT_BYTES_SIZE);
 
-            System.out.println("recv " + Base64.getEncoder().encodeToString(hashID) + " " + datagramPacket.getAddress().getHostAddress());
+            System.out.println("recv " + HashIDUtil.toString(hashID) + " " + datagramPacket.getAddress().getHostAddress());
 
             SparkDataType dataType = SparkDataType.values()[BytesUtil.bytes2Int(dataTypeBytes)];
             int fileLength = BytesUtil.bytes2Int(fileLengthBytes);
-            String hashIDStr = Base64.getEncoder().encodeToString(hashID);
+            String hashIDStr = HashIDUtil.toString(hashID);
 
             byte[] fileData = new byte[fileLength];
             System.arraycopy(data, BytesUtil.INT_BYTES_SIZE + hashIDSize + BytesUtil.INT_BYTES_SIZE,
@@ -87,7 +86,7 @@ public class SparkRecvLoopThread extends Thread {
 
             switch (dataType) {
                 case PUSH_SPARK:
-                    pushSpark(hashIDStr, fileData);
+                    pushSpark(hashIDStr, fileData, datagramPacket.getAddress().getHostAddress());
                     break;
                 default:
                     break;
@@ -95,7 +94,7 @@ public class SparkRecvLoopThread extends Thread {
         }
     }
 
-    private void pushSpark(String hashIDStr, byte[] fileData) {
+    private void pushSpark(String hashIDStr, byte[] fileData, String fromHost) {
         // 如果本地已有该spark，就不转发，防止消息风暴
         if(!peer.getSparkFileList().contains(hashIDStr)) {
             saveSpark(hashIDStr, fileData);
@@ -105,6 +104,11 @@ public class SparkRecvLoopThread extends Thread {
             List<Route> resList = peer.getRouteList().searchFromRouteList(hashIDStr, sparkBakCount);
             // 去掉自己
             resList.removeIf(route -> route.equalsByHashID(peer.getHashID()));
+            // 去掉发送的源节点
+            Route formRoute = peer.getRouteList().getRouteByHost(fromHost);
+            if(formRoute != null) {
+                resList.removeIf(route -> route.equalsByHashID(formRoute.getHashID()));
+            }
             SparkRecvLoopThread.sendSpark(resList, peer.getHashIDString(), hashIDStr, sparkBakCount, peer.getSparkFileList());
         }
     }

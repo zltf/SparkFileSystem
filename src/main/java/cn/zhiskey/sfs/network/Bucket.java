@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * TODO: description
@@ -73,6 +74,19 @@ public class Bucket {
 
     public Map<String, Route> getRouteMap() {
         return routeMap;
+    }
+
+    public Route getRoute(String hashID) {
+        return routeMap.get(hashID);
+    }
+
+    public Route getRouteByHost(String host) {
+        for (String key : routeMap.keySet()) {
+            if(routeMap.get(key).getHost().equals(host)) {
+                return routeMap.get(key);
+            }
+        }
+        return null;
     }
 
     @Override

@@ -5,6 +5,7 @@ import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -22,20 +23,7 @@ public class Test {
             e.printStackTrace();
         }
 
-        Scanner scanner = new Scanner((System.in));
-
-        Peer peer = new Peer();
-        peer.joinNetWork(scanner.next());
-
-//        while (true) {
-//            String hashID = scanner.next();
-//            Message msg = new Message("SearchNode");
-//            msg.put("count", Integer.parseInt(ConfigUtil.getInstance().get("searchPeerCount")));
-//            msg.put("hashID", hashID);
-//            msg.put("searchType", "nearSpark");
-//            TempRouteRes.getInstance().put(hashID, new TempRouteResItem(
-//                    res -> System.out.println(TempRouteRes.getInstance().get(hashID))));
-//            UDPSocket.send("192.168.1.108", msg);
-//        }
+        FileUtil.recoverSpark("fgpyfOiCzopgkD50xxeVdkyRcDYIt3SaxFJ2Id5mtOs=");
+        System.out.println("finish");
     }
 }

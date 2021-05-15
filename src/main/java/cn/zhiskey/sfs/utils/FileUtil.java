@@ -6,7 +6,6 @@ import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 /**
@@ -44,11 +43,11 @@ public class FileUtil {
         byte[] fileFragment = new byte[sparkFileSize];
         while ((fis.read(fileFragment))!=-1){
             // 将文件分片hashID加入hashID列表
-            String hashIDStr = Base64.getEncoder().encodeToString(HashIDUtil.getHashID(fileFragment));
+            String hashIDStr = HashIDUtil.toString(HashIDUtil.getHashID(fileFragment));
             sparksHashIDList.add(hashIDStr);
             // 计算全文见hash校验码
             byte[] fileHashIDBytes = HashIDUtil.getHashID(fileHashID + hashIDStr);
-            fileHashID = Base64.getEncoder().encodeToString(fileHashIDBytes);
+            fileHashID = HashIDUtil.toString(fileHashIDBytes);
             // 制作文件分片spark
             newSparkFile(hashIDStr, fileFragment);
         }
@@ -58,6 +57,35 @@ public class FileUtil {
 
         sparksHashIDList.add(0, fileHashID);
         return sparksHashIDList;
+    }
+
+    public static String recoverSpark(String seedSparkHashID) {
+        File seedSpark = getSparkFile(seedSparkHashID);
+        String path = "";
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(seedSpark));
+            String fileName = bufferedReader.readLine();
+            path = ConfigUtil.INSTANCE.get("fileFolder") + "/" + fileName;
+            int length = Integer.parseInt(bufferedReader.readLine());
+
+            File file = new File(path);
+            makeParentFolder(file);
+            FileOutputStream fos = new FileOutputStream(file);
+
+            String sparkHashID = bufferedReader.readLine();
+            while (sparkHashID != null && !sparkHashID.equals("")) {
+                File spark = getSparkFile(sparkHashID);
+                FileInputStream fis = new FileInputStream(spark);
+                fos.write(fis.readAllBytes());
+                fos.flush();
+
+                sparkHashID = bufferedReader.readLine();
+            }
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return path;
     }
 
     private static void newSparkFile(String hashID, byte[] fileFragment) {

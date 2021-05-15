@@ -91,7 +91,6 @@ public class Peer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(list);
         int sparkBakCount = Integer.parseInt(ConfigUtil.getInstance().get("sparkBakCount"));
         // 向网络中节点发送spark
         for (String hashID : list) {
@@ -99,7 +98,6 @@ public class Peer {
             List<Route> resList = routeList.searchFromRouteList(hashID, sparkBakCount);
             // 去掉自己
             resList.removeIf(route -> route.equalsByHashID(getHashID()));
-            System.out.println(hashID + " " + resList);
             SparkRecvLoopThread.sendSpark(resList, getHashIDString(), hashID, sparkBakCount, sparkFileList);
         }
     }
@@ -126,7 +124,7 @@ public class Peer {
 
     private void initPeerData(Document document) {
         Element elementPeer = document.getDocumentElement();
-        hashID = Base64.getDecoder().decode(elementPeer.getAttribute("hashID"));
+        hashID = HashIDUtil.toBytes(elementPeer.getAttribute("hashID"));
         // 读取spark列表
         NodeList nodeListSparks = elementPeer.getElementsByTagName("sparks");
         for (int i = 0; i < nodeListSparks.getLength(); i++) {
@@ -156,7 +154,7 @@ public class Peer {
         Element elementPeer = document.createElement("peer");
 
         // 存储hashID
-        elementPeer.setAttribute("hashID", Base64.getEncoder().encodeToString(hashID));
+        elementPeer.setAttribute("hashID", HashIDUtil.toString(hashID));
         document.appendChild(elementPeer);
 
         // 存储spark列表
@@ -177,7 +175,7 @@ public class Peer {
     }
 
     public String getHashIDString() {
-        return Base64.getEncoder().encodeToString(hashID);
+        return HashIDUtil.toString(hashID);
     }
 
     public RouteList getRouteList() {

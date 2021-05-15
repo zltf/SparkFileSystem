@@ -4,6 +4,7 @@ import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.peer.Peer;
 import cn.zhiskey.sfs.peer.PeerStatus;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
+import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import com.alibaba.fastjson.JSONArray;
@@ -66,12 +67,12 @@ public class MessageHandler {
             System.out.println("已和种子节点取得通信");
 
             // 将种子节点加入路由表
-            byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(msg.getString("hashID"));
+            byte[] seedPeerHashIDBytes = HashIDUtil.toBytes(msg.getString("hashID"));
             peer.getRouteList().add(new Route(seedPeerHashIDBytes, fromHost));
 
             // 通知种子节点将自己加入网络
             msg = new Message("SearchPeer");
-            msg.put("hashID", Base64.getEncoder().encodeToString(peer.getHashID()));
+            msg.put("hashID", HashIDUtil.toString(peer.getHashID()));
             UDPSocket.send(fromHost, msg);
 
             // 设置状态为运行中
@@ -83,7 +84,7 @@ public class MessageHandler {
         String hashID = msg.getString("hashID");
 
         // 将节点加入路由表
-        byte[] seedPeerHashIDBytes = Base64.getDecoder().decode(hashID);
+        byte[] seedPeerHashIDBytes = HashIDUtil.toBytes(hashID);
         peer.getRouteList().add(new Route(seedPeerHashIDBytes, fromHost));
 
         // 寻找searchPeerCount个节点返回
@@ -107,7 +108,7 @@ public class MessageHandler {
         for (Object obj : peerArray) {
             JSONObject peerObj = (JSONObject) obj;
             String hashIDStr = peerObj.getString("hashID");
-            byte[] hashID = Base64.getDecoder().decode(hashIDStr);
+            byte[] hashID = HashIDUtil.toBytes(hashIDStr);
             String host = peerObj.getString("host");
 
             Route route = new Route(hashID, host);
@@ -118,7 +119,7 @@ public class MessageHandler {
                 peer.getRouteList().add(route);
                 // 通知返回的节点将自己加入网络
                 msg = new Message("SearchPeer");
-                msg.put("hashID", Base64.getEncoder().encodeToString(peer.getHashID()));
+                msg.put("hashID", HashIDUtil.toString(peer.getHashID()));
                 UDPSocket.send(route.getHost(), msg);
             }
 

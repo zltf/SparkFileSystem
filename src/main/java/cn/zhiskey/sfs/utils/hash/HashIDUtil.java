@@ -71,7 +71,7 @@ public enum  HashIDUtil {
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static int cpl(String hashID1, String hashID2) {
-        return cpl(Base64.getDecoder().decode(hashID1), Base64.getDecoder().decode(hashID2));
+        return cpl(toBytes(hashID1), toBytes(hashID2));
     }
 
     /**
@@ -83,7 +83,7 @@ public enum  HashIDUtil {
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public int cpl(String hashID) {
-        return cpl(Base64.getDecoder().decode(hashID));
+        return cpl(toBytes(hashID));
     }
 
     /**
@@ -107,5 +107,31 @@ public enum  HashIDUtil {
      */
     public static byte[] getHashID(String str) {
         return getHashID(str.getBytes());
+    }
+
+    /**
+     * 将字节数组hashID转换为字符串hashID<br>
+     * Base64替换“/”
+     *
+     * @param hashID 字节数组hashID
+     * @return java.lang.String 字符串hashID
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static String toString(byte[] hashID) {
+        String res = Base64.getEncoder().encodeToString(hashID);
+        return res.replace('/', '-');
+    }
+
+    /**
+     * 将字符串hashID转换为字节数组hashID<br>
+     * Base64替换“/”
+     *
+     * @param hashID 字符串hashID
+     * @return byte[] 字节数组hashID
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static byte[] toBytes(String hashID) {
+        hashID = hashID.replace('-', '/');
+        return Base64.getDecoder().decode(hashID);
     }
 }
