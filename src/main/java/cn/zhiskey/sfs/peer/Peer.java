@@ -98,8 +98,15 @@ public class Peer {
             List<Route> resList = routeList.searchFromRouteList(hashID, sparkBakCount);
             // 去掉自己
             resList.removeIf(route -> route.equalsByHashID(getHashID()));
-            SparkRecvLoopThread.sendSpark(resList, getHashIDString(), hashID, sparkBakCount, sparkFileList);
+            SparkRecvLoopThread.sendSpark(resList, hashID, sparkBakCount, sparkFileList);
         }
+    }
+
+    public void download(String seedSparkHashID) {
+        // 下载seedSpark文件
+
+        // 按seedSpark文件中的spark清单下载完整文件
+
     }
 
     /**

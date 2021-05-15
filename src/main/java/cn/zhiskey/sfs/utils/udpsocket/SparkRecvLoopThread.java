@@ -10,7 +10,6 @@ import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.List;
 
@@ -88,6 +87,9 @@ public class SparkRecvLoopThread extends Thread {
                 case PUSH_SPARK:
                     pushSpark(hashIDStr, fileData, datagramPacket.getAddress().getHostAddress());
                     break;
+                case DOWN_SPARK:
+                    downSpark(hashIDStr, fileData);
+                    break;
                 default:
                     break;
             }
@@ -109,7 +111,15 @@ public class SparkRecvLoopThread extends Thread {
             if(formRoute != null) {
                 resList.removeIf(route -> route.equalsByHashID(formRoute.getHashID()));
             }
-            SparkRecvLoopThread.sendSpark(resList, peer.getHashIDString(), hashIDStr, sparkBakCount, peer.getSparkFileList());
+            SparkRecvLoopThread.sendSpark(resList, hashIDStr, sparkBakCount, peer.getSparkFileList());
+        }
+    }
+
+    private void downSpark(String hashIDStr, byte[] fileData) {
+        // 如果本地已有该spark，就不保存
+        if(!peer.getSparkFileList().contains(hashIDStr)) {
+            saveSpark(hashIDStr, fileData);
+            peer.getSparkFileList().add(hashIDStr);
         }
     }
 
@@ -117,29 +127,23 @@ public class SparkRecvLoopThread extends Thread {
      * 向路由列表中的各个路由发送spark文件，并且如果本节点不是离spark较近的节点，删除本地的spark文件
      *
      * @param routeList 路由列表
-     * @param peerHashID 本节点的hashID
      * @param hashID spark的hashID
      * @param count 文件存在的最大备份份数
      * @param sparkFileList 本节点spark文件表
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
-    public static void sendSpark(List<Route> routeList, String peerHashID, String hashID, int count, List<String> sparkFileList) {
+    public static void sendSpark(List<Route> routeList, String hashID, int count, List<String> sparkFileList) {
         File file = FileUtil.getSparkFile(hashID);
-        boolean selfFlag = false;
         for (Route route : routeList) {
             try {
                 UDPSocket.send(route.getHost(), file, SparkDataType.PUSH_SPARK);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(route.getHashIDString().equals(peerHashID)) {
-                // 结果列表中包含节点自己
-                selfFlag = true;
-            }
         }
 
-        // 本地的文件是多余的，删除
-        if(routeList.size() >= count && !selfFlag) {
+        // 本地的文件是多余的（此处一定不包含节点自己，前面已去除自己），删除文件
+        if(routeList.size() >= count) {
             boolean deleteRes = file.delete();
             if(!deleteRes) {
                 new IOException("Can not delete file " + file.getName()).printStackTrace();

@@ -73,10 +73,19 @@ public class FileUtil {
             FileOutputStream fos = new FileOutputStream(file);
 
             String sparkHashID = bufferedReader.readLine();
+            int pos = 0;
             while (sparkHashID != null && !sparkHashID.equals("")) {
                 File spark = getSparkFile(sparkHashID);
                 FileInputStream fis = new FileInputStream(spark);
-                fos.write(fis.readAllBytes());
+                byte[] data = fis.readAllBytes();
+                pos += data.length;
+                if(pos > length) {
+                    int len = data.length - pos + length;
+                    byte[] dataLast = new byte[data.length - pos + length];
+                    System.arraycopy(data, 0, dataLast, 0, len);
+                    data = dataLast;
+                }
+                fos.write(data);
                 fos.flush();
 
                 sparkHashID = bufferedReader.readLine();
