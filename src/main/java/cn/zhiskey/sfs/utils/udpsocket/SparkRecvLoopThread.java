@@ -81,9 +81,13 @@ public class SparkRecvLoopThread extends Thread {
             int fileLength = BytesUtil.bytes2Int(fileLengthBytes);
             String hashIDStr = Base64.getEncoder().encodeToString(hashID);
 
+            byte[] fileData = new byte[fileLength];
+            System.arraycopy(data, BytesUtil.INT_BYTES_SIZE + hashIDSize + BytesUtil.INT_BYTES_SIZE,
+                    fileData, 0, fileLength);
+
             switch (dataType) {
                 case PUSH_SPARK:
-                    pushSpark(fileLength, hashIDStr, datagramPacket.getAddress().getHostAddress());
+                    pushSpark(hashIDStr, fileData);
                     break;
                 default:
                     break;
@@ -91,10 +95,10 @@ public class SparkRecvLoopThread extends Thread {
         }
     }
 
-    private void pushSpark(int fileLength, String hashIDStr, String host) {
+    private void pushSpark(String hashIDStr, byte[] fileData) {
         // 如果本地已有该spark，就不转发，防止消息风暴
         if(!peer.getSparkFileList().contains(hashIDStr)) {
-            saveSpark(fileLength, hashIDStr);
+            saveSpark(hashIDStr, fileData);
             peer.getSparkFileList().add(hashIDStr);
             int sparkBakCount = Integer.parseInt(ConfigUtil.getInstance().get("sparkBakCount"));
             // 向网络中节点发送spark
@@ -120,7 +124,7 @@ public class SparkRecvLoopThread extends Thread {
         boolean selfFlag = false;
         for (Route route : routeList) {
             try {
-                UDPSocket.sendSpark(route.getHost(), file, SparkDataType.PUSH_SPARK);
+                UDPSocket.send(route.getHost(), file, SparkDataType.PUSH_SPARK);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -178,6 +182,22 @@ public class SparkRecvLoopThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("new spark: " + hashIDStr);
+    }
+
+    private void saveSpark(String hashIDStr, byte[] fileBytes) {
+        File file = FileUtil.getSparkFile(hashIDStr);
+        FileUtil.makeParentFolder(file);
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(fileBytes);
+            fos.flush();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        peer.getSparkFileList().add(hashIDStr);
         System.out.println("new spark: " + hashIDStr);
     }
 }
