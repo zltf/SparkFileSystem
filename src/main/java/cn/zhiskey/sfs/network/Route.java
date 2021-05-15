@@ -41,6 +41,10 @@ public class Route {
         return Arrays.equals(hashID, route.hashID) && Objects.equals(host, route.host);
     }
 
+    public boolean equalsByHashID(byte[] bytes) {
+        return Arrays.equals(hashID, bytes);
+    }
+
     @Override
     public int hashCode() {
         int result = Objects.hash(host);

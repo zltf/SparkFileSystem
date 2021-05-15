@@ -9,6 +9,7 @@ import cn.zhiskey.sfs.utils.MacUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.XMLUtil;
+import cn.zhiskey.sfs.utils.udpsocket.SparkRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import org.w3c.dom.Document;
@@ -74,6 +75,9 @@ public class Peer {
             messageHandler.handle(datagramPacket);
         }).start();
 
+        // 启动文件接收循环
+        new SparkRecvLoopThread(UDPSocket.getSparkRecvPort(), this).start();
+
         // 获取种子节点hashID
         Message msg = new Message("GetHashID");
         UDPSocket.send(seedPeerHost, msg);
@@ -87,12 +91,16 @@ public class Peer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println(list);
         int sparkBakCount = Integer.parseInt(ConfigUtil.getInstance().get("sparkBakCount"));
         // 向网络中节点发送spark
         for (String hashID : list) {
             sparkFileList.add(hashID);
             List<Route> resList = routeList.searchFromRouteList(hashID, sparkBakCount);
-            MessageHandler.sendSpark(resList, getHashIDString(), hashID, sparkBakCount, sparkFileList);
+            // 去掉自己
+            resList.removeIf(route -> route.equalsByHashID(getHashID()));
+            System.out.println(hashID + " " + resList);
+            SparkRecvLoopThread.sendSpark(resList, getHashIDString(), hashID, sparkBakCount, sparkFileList);
         }
     }
 

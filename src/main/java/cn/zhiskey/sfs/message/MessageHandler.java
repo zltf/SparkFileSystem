@@ -3,18 +3,12 @@ package cn.zhiskey.sfs.message;
 import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.peer.Peer;
 import cn.zhiskey.sfs.peer.PeerStatus;
-import cn.zhiskey.sfs.utils.BytesUtil;
-import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
-import cn.zhiskey.sfs.utils.udpsocket.SparkDataType;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.*;
 

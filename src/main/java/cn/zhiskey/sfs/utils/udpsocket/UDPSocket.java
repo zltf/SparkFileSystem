@@ -156,22 +156,36 @@ public class UDPSocket {
         // 文件长度字节数组到发送数组
         System.arraycopy(fileLengthBytes, 0, sendBytes, BytesUtil.INT_BYTES_SIZE + hashIDSize, BytesUtil.INT_BYTES_SIZE);
 
+        System.out.println("send " + Base64.getEncoder().encodeToString(hashIDBytes) + " " + host);
+
         DatagramSocket datagramSocket = new DatagramSocket();
         BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
 
         DatagramPacket perData = new DatagramPacket(sendBytes, sendBytes.length, InetAddress.getByName(host), getSparkRecvPort());
         datagramSocket.send(perData);
 
+//        byte[] ackBytes = new byte[BytesUtil.INT_BYTES_SIZE];
+//        DatagramPacket ack = new DatagramPacket(ackBytes,ackBytes.length);
+
+//        // 文件包顺序号
+//        int dataSeq = 0;
         byte[] buf = new byte[SparkRecvLoopThread.BUFF_SIZE];
         int len;
         while ((len = bis.read(buf)) != -1) {
             DatagramPacket data = new DatagramPacket(buf, len, InetAddress.getByName(host), getSparkRecvPort());
             datagramSocket.send(data);
+//            // 设置确认信息接收时间，3秒后未收到对方确认信息，则重新发送一次
+//            datagramSocket.setSoTimeout(3000);
+//            while (true) {
+//                datagramSocket.send(data);
+//                datagramSocket.receive(ack);
+//                if(dataSeq == BytesUtil.bytes2Int(ack.getData())) {
+//                    System.out.println(dataSeq + "s");
+//                    dataSeq++;
+//                    break;
+//                }
+//            }
         }
-        // 文件传完后，发送一个结束包
-        byte[] finBytes = "fin".getBytes();
-        DatagramPacket fin = new DatagramPacket(finBytes, finBytes.length, InetAddress.getByName(host), getSparkRecvPort());
-        datagramSocket.send(fin);
 
         bis.close();
         datagramSocket.close();
