@@ -176,8 +176,10 @@ public class MessageHandler {
         res.put("peers", peerArray);
         UDPSocket.send(fromHost, res);
 
-        // 将本地和新节点更近的Spark传给新节点
-        for (String sparkHashID : peer.getSparkFileList()) {
+        // 将本地和新节点更近的Spark传给新节点，涉及到列表元素删除迭代器遍历
+        Iterator<String> iterator = peer.getSparkFileList().iterator();
+        while (iterator.hasNext()) {
+            String sparkHashID = iterator.next();
             // 本地据Spark文件的距离
             int cpl1 = HashIDUtil.getInstance().cpl(sparkHashID);
             // 新节点据Spark文件的距离
@@ -192,8 +194,9 @@ public class MessageHandler {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                // 删除本地的文件
-                FileUtil.deleteSparkFile(file, peer.getSparkFileList(), hashID);
+//                // 删除本地的文件
+//                FileUtil.deleteSparkFile(file, sparkHashID);
+//                iterator.remove();
             }
         }
     }

@@ -199,10 +199,11 @@ public class SparkRecvLoopThread extends Thread {
             }
         }
 
-        // 本地的文件是多余的（此处一定不包含节点自己，前面已去除自己），删除文件
-        if(routeList.size() >= count) {
-            FileUtil.deleteSparkFile(file, sparkFileList, hashID);
-        }
+//        // 本地的文件是多余的（此处一定不包含节点自己，前面已去除自己），删除文件
+//        if(routeList.size() >= count) {
+//            FileUtil.deleteSparkFile(file, hashID);
+//            sparkFileList.remove(hashID);
+//        }
     }
 
     /**

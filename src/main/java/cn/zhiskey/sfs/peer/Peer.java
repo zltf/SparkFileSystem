@@ -325,7 +325,7 @@ public class Peer {
         Peer peer = new Peer();
         peer.joinNetWork(scanner.next());
 
-        String op = scanner.next();;
+        String op = scanner.next();
         while (!op.equals("exit")) {
             switch (op) {
                 case "make":
