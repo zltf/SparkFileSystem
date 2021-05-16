@@ -38,7 +38,8 @@ public class RouteList {
         if(bucket.size() > bucketSizeLimit) {
             bucket.lose();
         }
-        System.out.println("\tnew route: " + route);
+        System.out.print("\tnew route: ");
+        route.show();
     }
 
     public void remove(int cpl, String hashID) {
@@ -127,6 +128,12 @@ public class RouteList {
                     resList.set(0, route);
                 }
             }
+        }
+    }
+
+    public void show() {
+        for (Bucket bucket : bucketList) {
+            bucket.show();
         }
     }
 

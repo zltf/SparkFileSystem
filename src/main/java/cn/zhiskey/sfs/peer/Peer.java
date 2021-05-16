@@ -213,6 +213,10 @@ public class Peer {
         this.status = status;
     }
 
+    private void showRouteList() {
+        routeList.show();
+    }
+
     public static void main(String[] args) {
         // 载入配置文件
         try {
@@ -236,12 +240,17 @@ public class Peer {
                 case "down":
                     peer.download(scanner.next());
                     break;
+                case "route":
+                    peer.showRouteList();
+                    break;
                 default:
+                    System.out.println("Unrecognized!");
                     break;
             }
             op = scanner.next();
         }
         peer.close();
+        System.exit(0);
     }
 }
 

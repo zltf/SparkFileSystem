@@ -112,6 +112,7 @@ public class UDPSocket {
         // 将文件内容写入发送数组
         FileInputStream fis = new FileInputStream(file);
         System.arraycopy(fis.readAllBytes(), 0, sendBytes, staPos, fileLength);
+        fis.close();
 
         // 添加spark文件标识码
         byte[] dataTypeBytes = BytesUtil.int2Bytes(dataType.ordinal());

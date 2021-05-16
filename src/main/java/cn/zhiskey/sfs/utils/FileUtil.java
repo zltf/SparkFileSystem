@@ -129,7 +129,7 @@ public class FileUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("new spark: " + fileHashID);
+        System.out.println("\tnew spark: " + fileHashID);
     }
 
     public static String getSparkFilePath(String hashID) {

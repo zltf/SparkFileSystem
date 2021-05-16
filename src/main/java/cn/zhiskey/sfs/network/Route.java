@@ -51,6 +51,10 @@ public class Route {
         return result;
     }
 
+    public void show() {
+        System.out.println("\tHashID: " + HashIDUtil.toString(hashID) + "  Host: " + host);
+    }
+
     @Override
     public String toString() {
         return "Route{" +

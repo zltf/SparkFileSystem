@@ -89,6 +89,16 @@ public class Bucket {
         return null;
     }
 
+    public void show() {
+        if(routeMap.size() > 0) {
+            System.out.println("cpl = " + cpl);
+            for (String key : routeMap.keySet()) {
+                routeMap.get(key).show();
+            }
+            System.out.println();
+        }
+    }
+
     @Override
     public String toString() {
         return "Bucket{" +
