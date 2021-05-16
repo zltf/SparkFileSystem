@@ -2,23 +2,42 @@ package cn.zhiskey.sfs.utils.hash;
 
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
- * TODO: description
+ * HashID工具类<br>
+ * 单例模式，枚举实现
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public enum  HashIDUtil {
+    /**
+     * 实例
+     */
     INSTANCE;
 
+    /**
+     * 本节点HashID
+     */
     private byte[] selfHashID = null;
 
+    /**
+     * 获取HashID工具实例
+     *
+     * @return cn.zhiskey.sfs.utils.hash.HashIDUtil HashID工具实例
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public static HashIDUtil getInstance() {
         return INSTANCE;
     }
 
+    /**
+     * 设置本节点的HashID<br>
+     * 后面计算距离时不用再传入
+     *
+     * @param selfHashID 本节点的HashID
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public void setSelfHashID(byte[] selfHashID) {
         this.selfHashID = selfHashID;
     }
@@ -110,11 +129,11 @@ public enum  HashIDUtil {
     }
 
     /**
-     * 将字节数组hashID转换为字符串hashID<br>
+     * 将字节数组hashID转换为字符串HashID<br>
      * Base64替换“/”
      *
-     * @param hashID 字节数组hashID
-     * @return java.lang.String 字符串hashID
+     * @param hashID 字节数组HashID
+     * @return java.lang.String 字符串HashID
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static String toString(byte[] hashID) {
@@ -123,11 +142,11 @@ public enum  HashIDUtil {
     }
 
     /**
-     * 将字符串hashID转换为字节数组hashID<br>
+     * 将字符串HashID转换为字节数组HashID<br>
      * Base64替换“/”
      *
-     * @param hashID 字符串hashID
-     * @return byte[] 字节数组hashID
+     * @param hashID 字符串HashID
+     * @return byte[] 字节数组HashID
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static byte[] toBytes(String hashID) {

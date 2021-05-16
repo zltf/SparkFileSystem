@@ -9,13 +9,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TODO
+ * 路由表类
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class RouteList {
+    /**
+     * 路由桶列表对象
+     */
     List<Bucket> bucketList;
 
+    /**
+     * 构造方法<br>
+     * 初始化路由桶列表对象，其尺寸为配置文件中bucketCount<br>
+     * 并初始化列表中所有的路由桶
+     *
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public RouteList() {
         int bucketCount = Integer.parseInt(ConfigUtil.getInstance().get("bucketCount"));
         // 创建路由桶列表
@@ -26,6 +36,12 @@ public class RouteList {
         }
     }
 
+    /**
+     * 向路由表中添加一条路由信息
+     *
+     * @param route 路由信息对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public void add(Route route) {
         // 如果已经有该hashID，不允许写入新路由
         if(containsRoute(route.getHashIDString())) {
@@ -33,30 +49,58 @@ public class RouteList {
         }
         int cpl = HashIDUtil.getInstance().cpl(route.getHashID());
         Bucket bucket = bucketList.get(cpl);
-        bucketList.get(cpl).add(route);
         int bucketSizeLimit = Integer.parseInt(ConfigUtil.getInstance().get("bucketSizeLimit"));
-        if(bucket.size() > bucketSizeLimit) {
+        while (bucket.size() >= bucketSizeLimit) {
             bucket.lose();
         }
+        bucketList.get(cpl).add(route);
         System.out.print("\tnew route: ");
         route.show();
     }
 
+    /**
+     * 从表中移除一条路由信息
+     *
+     * @param cpl 路由节点与本节点的cpl
+     * @param hashID 路由节点HashID
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public void remove(int cpl, String hashID) {
         Bucket bucket =  bucketList.get(cpl);
         bucket.remove(hashID);
     }
 
+    /**
+     * 获取某个路由桶
+     *
+     * @param cpl 路由桶的cpl值
+     * @return cn.zhiskey.sfs.network.Bucket 路由桶对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public Bucket getBucket(int cpl) {
         return bucketList.get(cpl);
     }
 
+    /**
+     * 获取某条路由信息对象
+     *
+     * @param hashID 路由节点的HashID
+     * @return cn.zhiskey.sfs.network.Route 路由信息对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public Route getRoute(String hashID) {
         int cpl = HashIDUtil.getInstance().cpl(hashID);
         Bucket bucket = bucketList.get(cpl);
         return bucket.getRoute(hashID);
     }
 
+    /**
+     * 通过路由节点主机地址获取路由信息对象
+     *
+     * @param host 路由节点主机地址
+     * @return cn.zhiskey.sfs.network.Route 路由信息对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public Route getRouteByHost(String host) {
         for (Bucket bucket : bucketList) {
             Route route = bucket.getRouteByHost(host);
@@ -67,6 +111,13 @@ public class RouteList {
         return null;
     }
 
+    /**
+     * 判断路由表中是否存在某条路由信息
+     *
+     * @param hashID 路由节点的HashID
+     * @return boolean 路由表中是否存在某条路由信息
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public boolean containsRoute(String hashID) {
         int cpl = HashIDUtil.getInstance().cpl(hashID);
         Bucket bucket = getBucket(cpl);
@@ -107,7 +158,7 @@ public class RouteList {
      * @param hashID 要搜索的hashID
      * @param count 返回的路由个数
      * @param resList 写入结果的列表
-     * @param cpl 桶的前缀数
+     * @param cpl 桶的cpl值
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     private void searchFromBucket(String hashID, int count, List<Route> resList, int cpl) {
@@ -131,6 +182,11 @@ public class RouteList {
         }
     }
 
+    /**
+     * 显示整个路由表
+     *
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public void show() {
         for (Bucket bucket : bucketList) {
             bucket.show();

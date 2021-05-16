@@ -25,6 +25,12 @@ public class FileUtil {
         return url == null ? "" : url.getPath();
     }
 
+    /**
+     * 为文件创建父目录文件夹
+     *
+     * @param file 文件对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public static void makeParentFolder(File file) {
         if (!file.getParentFile().exists()) {
             boolean mkdirsRes = file.getParentFile().mkdirs();
@@ -34,6 +40,13 @@ public class FileUtil {
         }
     }
 
+    /**
+     * 制作某个文件的Spark种子
+     *
+     * @param file 要制作Spark种子的文件对象
+     * @return java.util.List<java.lang.String> 文件的种子HashID
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public static List<String> makeSpark(File file) throws IOException {
         List<String> sparksHashIDList = new ArrayList<>();
         String fileHashID = "";
@@ -59,6 +72,13 @@ public class FileUtil {
         return sparksHashIDList;
     }
 
+    /**
+     * 将Spark文件恢复为原文件
+     *
+     * @param seedSparkHashID 种子文件HashID
+     * @return java.lang.String 恢复后文件的路径
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public static String recoverSpark(String seedSparkHashID) {
         File seedSpark = getSparkFile(seedSparkHashID);
         String path = "";
@@ -97,6 +117,13 @@ public class FileUtil {
         return path;
     }
 
+    /**
+     * 创建新Spark文件
+     *
+     * @param hashID Spark的HashID
+     * @param fileFragment 文件碎片的数据字节数组
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private static void newSparkFile(String hashID, byte[] fileFragment) {
         File file = getSparkFile(hashID);
         try {
@@ -110,6 +137,15 @@ public class FileUtil {
         System.out.println("\tnew spark: " + hashID);
     }
 
+    /**
+     * 创建新的Spark种子文件
+     *
+     * @param fileHashID Spark种子的HashID
+     * @param fileName 文件名
+     * @param fileLength 文件长度
+     * @param sparksHashIDList 文件所有Spark的HashID列表
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private static void newSeedSparkFile(String fileHashID, String fileName, long fileLength,List<String> sparksHashIDList) {
         File file = getSparkFile(fileHashID);
         try {
@@ -132,6 +168,13 @@ public class FileUtil {
         System.out.println("\tnew spark: " + fileHashID);
     }
 
+    /**
+     * 通过HashID获取Spark文件的路径
+     *
+     * @param hashID HashID
+     * @return java.lang.String 文件路径字符串
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public static String getSparkFilePath(String hashID) {
         String filePath = ConfigUtil.getInstance().get("sparkFolder");
         filePath += filePath.charAt(filePath.length()-1) == '/' ? hashID : '/' + hashID;
@@ -139,6 +182,13 @@ public class FileUtil {
         return filePath;
     }
 
+    /**
+     * 通过HashID获取Spark文件对象
+     *
+     * @param hashID HashID
+     * @return java.lang.String 文件对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public static File getSparkFile(String hashID) {
         String filePath = getSparkFilePath(hashID);
         File file = new File(filePath);
@@ -146,6 +196,13 @@ public class FileUtil {
         return file;
     }
 
+    /**
+     * 将表示文件长度的字符串转换成字节数
+     *
+     * @param fileSize 表示文件长度的字符串
+     * @return int 文件字节数
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private static int getFileByteSize(String fileSize) {
         int num = 0;
         // 提取前面的数字部分

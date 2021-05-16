@@ -20,4 +20,9 @@ public enum PeerStatus {
      * 节点正在运行状态
      */
     RUNNING,
+
+    /**
+     * 节点已被关闭
+     */
+    CLOSED,
 }

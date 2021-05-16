@@ -6,9 +6,9 @@ import cn.zhiskey.sfs.peer.PeerStatus;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
-import cn.zhiskey.sfs.utils.udpsocket.spark.SparkDataType;
-import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
-import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
+import cn.zhiskey.sfs.network.udpsocket.spark.SparkDataType;
+import cn.zhiskey.sfs.network.udpsocket.UDPRecvLoopThread;
+import cn.zhiskey.sfs.network.udpsocket.UDPSocket;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
@@ -17,30 +17,48 @@ import java.net.DatagramPacket;
 import java.util.*;
 
 /**
- * TODO: description
+ * 处理接收到的消息对象<br>
+ * 根据消息的不同类型分别进行处理
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class MessageHandler {
-    private Peer peer;
+    /**
+     * 要处理消息的本地节点对象，用于获取/更新节点状态
+     */
+    private final Peer peer;
 
+    /**
+     * 构造方法<br>
+     * 传入要处理消息的本地节点对象
+     *
+     * @param peer 要处理消息的本地节点对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public MessageHandler(Peer peer) {
         this.peer = peer;
     }
 
+    /**
+     * 消息处理方法
+     * 根据消息的不同类型分别交由不同方法进行处理
+     *
+     * @param datagramPacket 消息的数据包对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public void handle(DatagramPacket datagramPacket) {
         Message msg = UDPRecvLoopThread.getMessage(datagramPacket);
         String fromHost = datagramPacket.getAddress().getHostAddress();
         switch (msg.getType()) {
             /*
-             * 获取hashID
+             * 获取HashID
              * no params
              */
             case "GetHashID":
                 getHashID(fromHost);
                 break;
             /*
-             * 获取hashID响应
+             * 获取HashID响应
              * param :
              *     hashID
              */
@@ -48,7 +66,7 @@ public class MessageHandler {
                 resGetHashID(msg, fromHost);
                 break;
             /*
-             * 搜索最近节点
+             * 搜索较近节点
              * param :
              *     hashID
              */
@@ -56,7 +74,7 @@ public class MessageHandler {
                 searchPeer(msg, fromHost);
                 break;
             /*
-             * 搜索最近节点响应
+             * 搜索较近节点响应
              * params :
              *     [peers]:
              *         hashID
@@ -66,7 +84,7 @@ public class MessageHandler {
                 resSearchPeer(msg);
                 break;
             /*
-             * 索要spark
+             * 索要Spark
              * params :
              *     sparkHashID
              *     isSeed
@@ -75,7 +93,8 @@ public class MessageHandler {
                 askForSpark(msg, fromHost);
                 break;
             /*
-             * 告知可能有spark的节点列表
+             * 索要Spark响应
+             * 告知可能有Spark的节点列表
              * params :
              *     sparkHashID
              *     isSeed
@@ -90,12 +109,25 @@ public class MessageHandler {
         }
     }
 
+    /**
+     * 收到获取本节点HashID的消息
+     *
+     * @param fromHost 消息来路主机
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void getHashID(String fromHost) {
         Message res = new Message("ResGetHashID");
         res.put("hashID", peer.getHashID());
         UDPSocket.send(fromHost, res);
     }
 
+    /**
+     * 收到获取本地节点HashID消息的响应
+     *
+     * @param msg 消息对象
+     * @param fromHost 消息来路主机
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void resGetHashID(Message msg, String fromHost) {
         if(peer.getStatus() == PeerStatus.WAIT_SEED_HASH_ID) {
             System.out.println("Seed peer connected!");
@@ -114,6 +146,13 @@ public class MessageHandler {
         }
     }
 
+    /**
+     * 搜素较近节点
+     *
+     * @param msg 消息对象
+     * @param fromHost 消息来路主机
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void searchPeer(Message msg, String fromHost) {
         String hashID = msg.getString("hashID");
 
@@ -137,6 +176,12 @@ public class MessageHandler {
         UDPSocket.send(fromHost, res);
     }
 
+    /**
+     * 搜索较近节点响应
+     *
+     * @param msg 消息对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void resSearchPeer(Message msg) {
         JSONArray peerArray = (JSONArray) msg.get("peers");
         for (Object obj : peerArray) {
@@ -159,6 +204,13 @@ public class MessageHandler {
         }
     }
 
+    /**
+     * 索要Spark
+     *
+     * @param msg 消息对象
+     * @param fromHost 消息来路主机
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void askForSpark(Message msg, String fromHost) {
         String sparkHashID = msg.getString("sparkHashID");
         String isSeed = msg.getString("isSeed");
@@ -192,6 +244,14 @@ public class MessageHandler {
         UDPSocket.send(fromHost, res);
     }
 
+    /**
+     * 索要Spark响应<br>
+     * 只有在索要的主机没有该Spark时才会响应此消息<br>
+     * 否则直接发送Spark文件
+     *
+     * @param msg 消息对象
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void resAskForSpark(Message msg) {
         String sparkHashID = msg.getString("sparkHashID");
         String isSeed = msg.getString("isSeed");

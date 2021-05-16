@@ -1,13 +1,9 @@
 package cn.zhiskey.sfs.peer;
 
-import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
-import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Scanner;
 
 /**
  * 测试模块功能
@@ -15,6 +11,12 @@ import java.util.Scanner;
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class Test {
+    /**
+     * 测试程序主函数
+     *
+     * @param args 程序的外部输入
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public static void main(String[] args) {
         // 载入配置文件
         try {

@@ -1,4 +1,4 @@
-package cn.zhiskey.sfs.utils.udpsocket;
+package cn.zhiskey.sfs.network.udpsocket;
 
 import cn.zhiskey.sfs.message.Message;
 
@@ -27,7 +27,7 @@ public class UDPRecvLoopThread extends Thread {
     /**
      * 消息接收策略
      */
-    private Recvable recvable;
+    private final Recvable recvable;
 
     /**
      * 接收缓冲区大小<br>
@@ -95,9 +95,9 @@ public class UDPRecvLoopThread extends Thread {
     }
 
     /**
-     * 从datagramPacket对象中获取data字符串
+     * 从DatagramPacket对象中获取data字符串
      *
-     * @param datagramPacket datagramPacket对象
+     * @param datagramPacket DatagramPacket对象
      * @return java.lang.String data字符串
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
@@ -107,9 +107,9 @@ public class UDPRecvLoopThread extends Thread {
     }
 
     /**
-     * 从datagramPacket对象中获取消息对象
+     * 从DatagramPacket对象中获取消息对象
      *
-     * @param datagramPacket datagramPacket对象
+     * @param datagramPacket DatagramPacket对象
      * @return cn.zhiskey.sfs.message.Message 消息对象
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
@@ -118,10 +118,22 @@ public class UDPRecvLoopThread extends Thread {
                 datagramPacket.getOffset() + datagramPacket.getLength()));
     }
 
+    /**
+     * 获取消息接收缓冲区大小
+     *
+     * @return int 消息接收缓冲区大小
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public int getBuffSize() {
         return buffSize;
     }
 
+    /**
+     * 设置消息接收缓冲区大小
+     *
+     * @param buffSize 消息接收缓冲区大小
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public void setBuffSize(int buffSize) {
         this.buffSize = buffSize;
     }
@@ -131,7 +143,18 @@ public class UDPRecvLoopThread extends Thread {
  * 消息接收循环状态
  */
 enum Status {
+    /**
+     * 不可用状态
+     */
     DISABLE,
+
+    /**
+     * 正在运行状态
+     */
     RUNNABLE,
+
+    /**
+     * 暂停状态
+     */
     STOP,
 }

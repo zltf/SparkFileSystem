@@ -1,13 +1,14 @@
-package cn.zhiskey.sfs.utils.udpsocket.spark;
+package cn.zhiskey.sfs.network.udpsocket.spark;
 
 import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.peer.Peer;
+import cn.zhiskey.sfs.peer.PeerStatus;
 import cn.zhiskey.sfs.utils.BytesUtil;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
-import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
+import cn.zhiskey.sfs.network.udpsocket.UDPSocket;
 
 import java.io.*;
 import java.net.DatagramPacket;
@@ -16,11 +17,16 @@ import java.net.SocketException;
 import java.util.List;
 
 /**
- * TODO: description
+ * 接收Spark文件消息的循环线程<br>
+ * 不同于UDPRecvLoopThread，没有采用策略模式
+ * TODO 重构为策略模式
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
  */
 public class SparkRecvLoopThread extends Thread {
+    /**
+     * 要接收消息的本地节点对象，用于获取/更新节点状态
+     */
     Peer peer;
 
     /**
@@ -31,7 +37,8 @@ public class SparkRecvLoopThread extends Thread {
     /**
      * 接收缓冲区大小<br>
      * 单位：字节<br>
-     * 值为1024 * 63
+     * 值为1024 * 63<br>
+     * 小于UDP单个数据包最大尺寸
      */
     public static final int BUFF_SIZE = 1024 * 63;
 
@@ -40,6 +47,7 @@ public class SparkRecvLoopThread extends Thread {
      * 初始化UDP Socket对象
      *
      * @param recvPort 接收消息的端口
+     * @param peer 要接收消息的本地节点对象
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public SparkRecvLoopThread(int recvPort, Peer peer) {
@@ -52,9 +60,15 @@ public class SparkRecvLoopThread extends Thread {
         }
     }
 
+    /**
+     * 重写线程的run方法，实现循环接收消息的逻辑<br>
+     * 通过消息的SparkDataType将消息交由不同的方法处理
+     *
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     @Override
     public void run() {
-        while (true) {
+        while (peer.getStatus() != PeerStatus.CLOSED) {
             byte[] preData = new byte[BUFF_SIZE];
             DatagramPacket datagramPacket = new DatagramPacket(preData,preData.length);
             try {
@@ -101,6 +115,14 @@ public class SparkRecvLoopThread extends Thread {
         }
     }
 
+    /**
+     * 收到Spark推送消息
+     *
+     * @param hashIDStr Spark的HashID
+     * @param fileData Spark文件的数据字节数组
+     * @param fromHost 消息来路主机
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void pushSpark(String hashIDStr, byte[] fileData, String fromHost) {
         // 如果本地已有该spark，就不转发，防止消息风暴
         if(!peer.getSparkFileList().contains(hashIDStr)) {
@@ -120,6 +142,13 @@ public class SparkRecvLoopThread extends Thread {
         }
     }
 
+    /**
+     * 收到Spark种子文件下载响应
+     *
+     * @param seedHashID Spark种子文件的HashID
+     * @param fileData Spark文件的数据字节数组
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void downSeedSpark(String seedHashID, byte[] fileData) {
         // 如果本地已有该spark，就不保存
         if(!peer.getSparkFileList().contains(seedHashID)) {
@@ -129,6 +158,13 @@ public class SparkRecvLoopThread extends Thread {
         }
     }
 
+    /**
+     * 收到Spark文件下载响应
+     *
+     * @param hashIDStr Spark的HashID
+     * @param fileData Spark文件的数据字节数组
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void downSpark(String hashIDStr, byte[] fileData) {
         // 如果本地已有该spark，就不保存
         if(!peer.getSparkFileList().contains(hashIDStr)) {
@@ -137,19 +173,20 @@ public class SparkRecvLoopThread extends Thread {
 
             String seedHashID = TempSparkList.getInstance().check(peer.getSparkFileList());
             if(seedHashID != null) {
-                FileUtil.recoverSpark(seedHashID);
+                String path = FileUtil.recoverSpark(seedHashID);
                 System.out.println("Down " + seedHashID + " " + "finished!");
+                System.out.println("Path: " + path);
             }
         }
     }
 
     /**
-     * 向路由列表中的各个路由发送spark文件，并且如果本节点不是离spark较近的节点，删除本地的spark文件
+     * 向路由列表中的各个路由发送Spark文件，并且如果本节点不是离Spark较近的节点，删除本地的Spark文件
      *
      * @param routeList 路由列表
-     * @param hashID spark的hashID
+     * @param hashID Spark的HashID
      * @param count 文件存在的最大备份份数
-     * @param sparkFileList 本节点spark文件表
+     * @param sparkFileList 本节点Spark文件表
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     public static void sendSpark(List<Route> routeList, String hashID, int count, List<String> sparkFileList) {
@@ -174,10 +211,10 @@ public class SparkRecvLoopThread extends Thread {
     }
 
     /**
-     * 保存接收到的spark文件
+     * 保存接收到的Spark文件
      *
      * @param fileLength 文件的长度
-     * @param hashIDStr spark的hashID
+     * @param hashIDStr Spark的HashID
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
      */
     private void saveSpark(int fileLength,String hashIDStr) {
@@ -213,6 +250,13 @@ public class SparkRecvLoopThread extends Thread {
         System.out.println("\tnew spark: " + hashIDStr);
     }
 
+    /**
+     * 保存Spark文件
+     *
+     * @param hashIDStr Spark的HashID
+     * @param fileBytes 文件数据字节数组
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     private void saveSpark(String hashIDStr, byte[] fileBytes) {
         File file = FileUtil.getSparkFile(hashIDStr);
         FileUtil.makeParentFolder(file);
@@ -229,10 +273,18 @@ public class SparkRecvLoopThread extends Thread {
         System.out.println("\tnew spark: " + hashIDStr);
     }
 
+    /**
+     * 通过Spark种子文件的信息向其他节点索要需要的Spark文件
+     *
+     * @param seedHashID Spark种子文件的HashID
+     * @param peer 本地节点对象，用于获取/更新节点状态
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
     public static void askForSparkBySeedFile(String  seedHashID, Peer peer) {
         File seedSpark = FileUtil.getSparkFile(seedHashID);
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(seedSpark));
+            // 无需文件名和文件长度信息，直接丢弃
             bufferedReader.readLine();
             bufferedReader.readLine();
 
@@ -258,8 +310,9 @@ public class SparkRecvLoopThread extends Thread {
             }
             String seedHashIDFin = TempSparkList.getInstance().check(peer.getSparkFileList());
             if(seedHashIDFin != null) {
-                FileUtil.recoverSpark(seedHashIDFin);
+                String path = FileUtil.recoverSpark(seedHashIDFin);
                 System.out.println("Down " + seedHashIDFin + " finished!");
+                System.out.println("Path: " + path);
             }
         } catch (IOException e) {
             e.printStackTrace();

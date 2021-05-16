@@ -1,11 +1,11 @@
-package cn.zhiskey.sfs.utils.udpsocket;
+package cn.zhiskey.sfs.network.udpsocket;
 
 import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.utils.BytesUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
-import cn.zhiskey.sfs.utils.udpsocket.spark.SparkDataType;
-import cn.zhiskey.sfs.utils.udpsocket.spark.SparkRecvLoopThread;
+import cn.zhiskey.sfs.network.udpsocket.spark.SparkDataType;
+import cn.zhiskey.sfs.network.udpsocket.spark.SparkRecvLoopThread;
 
 import java.io.*;
 import java.net.*;
@@ -75,7 +75,7 @@ public class UDPSocket {
     }
 
     /**
-     * UDP发送文件，会发生spark文件标识码
+     * UDP发送文件，会发送Spark文件类型标识码
      * TODO: 分段发送
      *
      * @param host 目的主机
@@ -125,7 +125,7 @@ public class UDPSocket {
     }
 
     /**
-     * UDP分段发送文件，会发生spark文件标识码
+     * UDP分段发送文件，会发送Spark文件类型标识码
      *
      * @param host 目的主机
      * @param file 待发送的文件
@@ -261,7 +261,7 @@ public class UDPSocket {
     }
 
     /**
-     * 获取配置文件中的spark接收端口
+     * 获取配置文件中的Spark接收端口
      *
      * @return int 配置文件中的spark接收端口
      * @author <a href="https://www.zhiskey.cn">Zhiskey</a>

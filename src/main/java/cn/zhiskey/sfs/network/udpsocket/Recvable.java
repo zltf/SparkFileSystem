@@ -1,4 +1,4 @@
-package cn.zhiskey.sfs.utils.udpsocket;
+package cn.zhiskey.sfs.network.udpsocket;
 
 import java.net.DatagramPacket;
 
