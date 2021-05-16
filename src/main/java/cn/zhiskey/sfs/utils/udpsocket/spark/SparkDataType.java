@@ -1,4 +1,4 @@
-package cn.zhiskey.sfs.utils.udpsocket;
+package cn.zhiskey.sfs.utils.udpsocket.spark;
 
 /**
  * TODO: description
@@ -7,5 +7,6 @@ package cn.zhiskey.sfs.utils.udpsocket;
  */
 public enum SparkDataType {
     PUSH_SPARK,
+    DOWN_SEED_SPARK,
     DOWN_SPARK,
 }

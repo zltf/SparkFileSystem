@@ -4,6 +4,8 @@ import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.utils.BytesUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
+import cn.zhiskey.sfs.utils.udpsocket.spark.SparkDataType;
+import cn.zhiskey.sfs.utils.udpsocket.spark.SparkRecvLoopThread;
 
 import java.io.*;
 import java.net.*;
@@ -117,7 +119,7 @@ public class UDPSocket {
         System.arraycopy(dataTypeBytes, 0, data, 0, BytesUtil.INT_BYTES_SIZE);
         System.arraycopy(sendBytes, 0, data, BytesUtil.INT_BYTES_SIZE, sendBytes.length);
 
-        System.out.println("send " + HashIDUtil.toString(hashIDBytes) + " " + host);
+        System.out.println("\tsend " + HashIDUtil.toString(hashIDBytes) + " " + host);
         send(host, getSparkRecvPort(), data);
     }
 
@@ -157,7 +159,7 @@ public class UDPSocket {
         // 文件长度字节数组到发送数组
         System.arraycopy(fileLengthBytes, 0, sendBytes, BytesUtil.INT_BYTES_SIZE + hashIDSize, BytesUtil.INT_BYTES_SIZE);
 
-        System.out.println("send " + HashIDUtil.toString(hashIDBytes) + " " + host);
+        System.out.println("\tsend " + HashIDUtil.toString(hashIDBytes) + " " + host);
 
         DatagramSocket datagramSocket = new DatagramSocket();
         BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));

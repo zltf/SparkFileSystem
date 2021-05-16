@@ -1,11 +1,13 @@
-package cn.zhiskey.sfs.utils.udpsocket;
+package cn.zhiskey.sfs.utils.udpsocket.spark;
 
+import cn.zhiskey.sfs.message.Message;
 import cn.zhiskey.sfs.network.Route;
 import cn.zhiskey.sfs.peer.Peer;
 import cn.zhiskey.sfs.utils.BytesUtil;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
+import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 
 import java.io.*;
 import java.net.DatagramPacket;
@@ -73,7 +75,7 @@ public class SparkRecvLoopThread extends Thread {
             System.arraycopy(data, BytesUtil.INT_BYTES_SIZE + hashIDSize,
                     fileLengthBytes, 0, BytesUtil.INT_BYTES_SIZE);
 
-            System.out.println("recv " + HashIDUtil.toString(hashID) + " " + datagramPacket.getAddress().getHostAddress());
+            System.out.println("\trecv " + HashIDUtil.toString(hashID) + " " + datagramPacket.getAddress().getHostAddress());
 
             SparkDataType dataType = SparkDataType.values()[BytesUtil.bytes2Int(dataTypeBytes)];
             int fileLength = BytesUtil.bytes2Int(fileLengthBytes);
@@ -86,6 +88,9 @@ public class SparkRecvLoopThread extends Thread {
             switch (dataType) {
                 case PUSH_SPARK:
                     pushSpark(hashIDStr, fileData, datagramPacket.getAddress().getHostAddress());
+                    break;
+                case DOWN_SEED_SPARK:
+                    downSeedSpark(hashIDStr, fileData);
                     break;
                 case DOWN_SPARK:
                     downSpark(hashIDStr, fileData);
@@ -115,11 +120,26 @@ public class SparkRecvLoopThread extends Thread {
         }
     }
 
+    private void downSeedSpark(String seedHashID, byte[] fileData) {
+        // 如果本地已有该spark，就不保存
+        if(!peer.getSparkFileList().contains(seedHashID)) {
+            saveSpark(seedHashID, fileData);
+            peer.getSparkFileList().add(seedHashID);
+            askForSparkBySeedFile(seedHashID, peer);
+        }
+    }
+
     private void downSpark(String hashIDStr, byte[] fileData) {
         // 如果本地已有该spark，就不保存
         if(!peer.getSparkFileList().contains(hashIDStr)) {
             saveSpark(hashIDStr, fileData);
             peer.getSparkFileList().add(hashIDStr);
+
+            String seedHashID = TempSparkList.getInstance().check(peer.getSparkFileList());
+            if(seedHashID != null) {
+                FileUtil.recoverSpark(seedHashID);
+                System.out.println("Down " + seedHashID + " " + "finished!");
+            }
         }
     }
 
@@ -149,7 +169,7 @@ public class SparkRecvLoopThread extends Thread {
                 new IOException("Can not delete file " + file.getName()).printStackTrace();
             }
             sparkFileList.remove(hashID);
-            System.out.println("delete spark: " + hashID);
+            System.out.println("\tdelete spark: " + hashID);
         }
     }
 
@@ -190,7 +210,7 @@ public class SparkRecvLoopThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("new spark: " + hashIDStr);
+        System.out.println("\tnew spark: " + hashIDStr);
     }
 
     private void saveSpark(String hashIDStr, byte[] fileBytes) {
@@ -206,8 +226,43 @@ public class SparkRecvLoopThread extends Thread {
         }
 
         peer.getSparkFileList().add(hashIDStr);
-        System.out.println("new spark: " + hashIDStr);
+        System.out.println("\tnew spark: " + hashIDStr);
+    }
+
+    public static void askForSparkBySeedFile(String  seedHashID, Peer peer) {
+        File seedSpark = FileUtil.getSparkFile(seedHashID);
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(seedSpark));
+            bufferedReader.readLine();
+            bufferedReader.readLine();
+
+            String sparkHashID = bufferedReader.readLine();
+            while (sparkHashID != null && !sparkHashID.equals("")) {
+                TempSparkList.getInstance().put(seedHashID, sparkHashID);
+                sparkHashID = bufferedReader.readLine();
+            }
+            for (String hashID : TempSparkList.getInstance().get(seedHashID)) {
+                if(peer.getSparkFileList().contains(hashID)) {
+                    continue;
+                }
+                int sparkBakCount = Integer.parseInt(ConfigUtil.getInstance().get("sparkBakCount"));
+                List<Route> resList = peer.getRouteList().searchFromRouteList(hashID, sparkBakCount);
+
+                for (Route route : resList) {
+                    // 节点索要spark文件
+                    Message msg = new Message("AskForSpark");
+                    msg.put("sparkHashID", hashID);
+                    msg.put("isSeed", "false");
+                    UDPSocket.send(route.getHost(), msg);
+                }
+            }
+            String seedHashIDFin = TempSparkList.getInstance().check(peer.getSparkFileList());
+            if(seedHashIDFin != null) {
+                FileUtil.recoverSpark(seedHashIDFin);
+                System.out.println("Down " + seedHashIDFin + " finished!");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
-
-// D:/apache-maven-3.8.1-bin.zip

@@ -38,7 +38,7 @@ public class RouteList {
         if(bucket.size() > bucketSizeLimit) {
             bucket.lose();
         }
-        System.out.println("new route: " + route);
+        System.out.println("\tnew route: " + route);
     }
 
     public void remove(int cpl, String hashID) {

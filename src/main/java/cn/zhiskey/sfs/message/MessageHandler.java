@@ -6,7 +6,7 @@ import cn.zhiskey.sfs.peer.PeerStatus;
 import cn.zhiskey.sfs.utils.FileUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
-import cn.zhiskey.sfs.utils.udpsocket.SparkDataType;
+import cn.zhiskey.sfs.utils.udpsocket.spark.SparkDataType;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import com.alibaba.fastjson.JSONArray;
@@ -32,37 +32,56 @@ public class MessageHandler {
         Message msg = UDPRecvLoopThread.getMessage(datagramPacket);
         String fromHost = datagramPacket.getAddress().getHostAddress();
         switch (msg.getType()) {
-            // 获取hashID
-            // 无参数
+            /*
+             * 获取hashID
+             * no params
+             */
             case "GetHashID":
                 getHashID(fromHost);
                 break;
-            // 获取hashID响应
-            // hashID
+            /*
+             * 获取hashID响应
+             * param :
+             *     hashID
+             */
             case "ResGetHashID":
                 resGetHashID(msg, fromHost);
                 break;
-            // 搜索最近节点
-            // hashID
+            /*
+             * 搜索最近节点
+             * param :
+             *     hashID
+             */
             case "SearchPeer":
                 searchPeer(msg, fromHost);
                 break;
-            // 搜索最近节点响应
-            // peers
-            //     hashID
-            //     host
+            /*
+             * 搜索最近节点响应
+             * params :
+             *     [peers]:
+             *         hashID
+             *         host
+             */
             case "ResSearchPeer":
                 resSearchPeer(msg);
                 break;
-            // 索要spark
-            // sparkHashID
+            /*
+             * 索要spark
+             * params :
+             *     sparkHashID
+             *     isSeed
+             */
             case "AskForSpark":
                 askForSpark(msg, fromHost);
                 break;
-            // 告知可能有spark的节点列表
-            // sparkHashID
-            // peers
-            //     host
+            /*
+             * 告知可能有spark的节点列表
+             * params :
+             *     sparkHashID
+             *     isSeed
+             *     [peers]:
+             *         host
+             */
             case "ResAskForSpark":
                 resAskForSpark(msg);
                 break;
@@ -79,7 +98,7 @@ public class MessageHandler {
 
     private void resGetHashID(Message msg, String fromHost) {
         if(peer.getStatus() == PeerStatus.WAIT_SEED_HASH_ID) {
-            System.out.println("已和种子节点取得通信");
+            System.out.println("Seed peer connected!");
 
             // 将种子节点加入路由表
             byte[] seedPeerHashIDBytes = HashIDUtil.toBytes(msg.getString("hashID"));
@@ -142,11 +161,13 @@ public class MessageHandler {
 
     private void askForSpark(Message msg, String fromHost) {
         String sparkHashID = msg.getString("sparkHashID");
+        String isSeed = msg.getString("isSeed");
 
         // 如果本地有该spark文件
         if(peer.getSparkFileList().contains(sparkHashID)) {
             try {
-                UDPSocket.send(fromHost, FileUtil.getSparkFile(sparkHashID), SparkDataType.DOWN_SPARK);
+                UDPSocket.send(fromHost, FileUtil.getSparkFile(sparkHashID),
+                        isSeed.equals("true") ? SparkDataType.DOWN_SEED_SPARK : SparkDataType.DOWN_SPARK);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -160,6 +181,7 @@ public class MessageHandler {
         // 返回结果
         Message res = new Message("ResAskForSpark");
         res.put("sparkHashID", sparkHashID);
+        res.put("isSeed", isSeed);
         JSONArray peerArray = new JSONArray();
         for(Route route : resList) {
             JSONObject peer = new JSONObject();
@@ -172,6 +194,7 @@ public class MessageHandler {
 
     private void resAskForSpark(Message msg) {
         String sparkHashID = msg.getString("sparkHashID");
+        String isSeed = msg.getString("isSeed");
         JSONArray peerArray = (JSONArray) msg.get("peers");
         for (Object obj : peerArray) {
             JSONObject peerObj = (JSONObject) obj;
@@ -179,7 +202,8 @@ public class MessageHandler {
 
             // 向返回的节点索要spark文件
             msg = new Message("AskForSpark");
-            msg.put("hashID", sparkHashID);
+            msg.put("sparkHashID", sparkHashID);
+            msg.put("isSeed", isSeed);
             UDPSocket.send(host, msg);
         }
     }

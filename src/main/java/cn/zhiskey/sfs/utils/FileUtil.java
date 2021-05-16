@@ -107,7 +107,7 @@ public class FileUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("new spark: " + hashID);
+        System.out.println("\tnew spark: " + hashID);
     }
 
     private static void newSeedSparkFile(String fileHashID, String fileName, long fileLength,List<String> sparksHashIDList) {

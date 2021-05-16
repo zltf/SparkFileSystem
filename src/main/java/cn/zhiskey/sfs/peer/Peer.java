@@ -9,7 +9,7 @@ import cn.zhiskey.sfs.utils.MacUtil;
 import cn.zhiskey.sfs.utils.hash.HashIDUtil;
 import cn.zhiskey.sfs.utils.config.ConfigUtil;
 import cn.zhiskey.sfs.utils.XMLUtil;
-import cn.zhiskey.sfs.utils.udpsocket.SparkRecvLoopThread;
+import cn.zhiskey.sfs.utils.udpsocket.spark.SparkRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPRecvLoopThread;
 import cn.zhiskey.sfs.utils.udpsocket.UDPSocket;
 import org.w3c.dom.Document;
@@ -100,13 +100,25 @@ public class Peer {
             resList.removeIf(route -> route.equalsByHashID(getHashID()));
             SparkRecvLoopThread.sendSpark(resList, hashID, sparkBakCount, sparkFileList);
         }
+        System.out.println("Make " + list.get(0) + " finished!");
     }
 
     public void download(String seedSparkHashID) {
         // 下载seedSpark文件
+        if(getSparkFileList().contains(seedSparkHashID)) {
+            SparkRecvLoopThread.askForSparkBySeedFile(seedSparkHashID, this);
+            return;
+        }
+        int sparkBakCount = Integer.parseInt(ConfigUtil.getInstance().get("sparkBakCount"));
+        List<Route> resList = routeList.searchFromRouteList(seedSparkHashID, sparkBakCount);
 
-        // 按seedSpark文件中的spark清单下载完整文件
-
+        for (Route route : resList) {
+            // 节点索要spark文件
+            Message msg = new Message("AskForSpark");
+            msg.put("sparkHashID", seedSparkHashID);
+            msg.put("isSeed", "true");
+            UDPSocket.send(route.getHost(), msg);
+        }
     }
 
     /**
@@ -211,14 +223,26 @@ public class Peer {
 
         Scanner scanner = new Scanner((System.in));
 
+        System.out.println("Input seed peer host:");
         Peer peer = new Peer();
         peer.joinNetWork(scanner.next());
 
         String op = scanner.next();;
         while (!op.equals("exit")) {
-            peer.makeSpark(op);
+            switch (op) {
+                case "make":
+                    peer.makeSpark(scanner.next());
+                    break;
+                case "down":
+                    peer.download(scanner.next());
+                    break;
+                default:
+                    break;
+            }
             op = scanner.next();
         }
         peer.close();
     }
 }
+
+// D:/apache-maven-3.8.1-bin.zip
