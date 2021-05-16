@@ -12,6 +12,7 @@ import cn.zhiskey.sfs.network.udpsocket.UDPSocket;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.*;
@@ -174,6 +175,27 @@ public class MessageHandler {
         }
         res.put("peers", peerArray);
         UDPSocket.send(fromHost, res);
+
+        // 将本地和新节点更近的Spark传给新节点
+        for (String sparkHashID : peer.getSparkFileList()) {
+            // 本地据Spark文件的距离
+            int cpl1 = HashIDUtil.getInstance().cpl(sparkHashID);
+            // 新节点据Spark文件的距离
+            int cpl2 = HashIDUtil.cpl(sparkHashID, hashID);
+
+            // 如果新节点更近
+            if(cpl1 < cpl2) {
+                File file = FileUtil.getSparkFile(sparkHashID);
+                // 发送文件
+                try {
+                    UDPSocket.send(fromHost, file, SparkDataType.PUSH_SPARK);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                // 删除本地的文件
+                FileUtil.deleteSparkFile(file, peer.getSparkFileList(), hashID);
+            }
+        }
     }
 
     /**

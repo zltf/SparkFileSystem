@@ -201,12 +201,7 @@ public class SparkRecvLoopThread extends Thread {
 
         // 本地的文件是多余的（此处一定不包含节点自己，前面已去除自己），删除文件
         if(routeList.size() >= count) {
-            boolean deleteRes = file.delete();
-            if(!deleteRes) {
-                new IOException("Can not delete file " + file.getName()).printStackTrace();
-            }
-            sparkFileList.remove(hashID);
-            System.out.println("\tdelete spark: " + hashID);
+            FileUtil.deleteSparkFile(file, sparkFileList, hashID);
         }
     }
 

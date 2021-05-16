@@ -197,6 +197,23 @@ public class FileUtil {
     }
 
     /**
+     * 从节点上删除一个Spark文件
+     *
+     * @param file 要删除的文件对象
+     * @param sparkFileList 节点的sparkFileList
+     * @param hashID Spark文件的HashID
+     * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
+     */
+    public static void deleteSparkFile(File file, List<String> sparkFileList, String hashID) {
+        boolean deleteRes = file.delete();
+        if(!deleteRes) {
+            new IOException("Can not delete file " + file.getName()).printStackTrace();
+        }
+        sparkFileList.remove(hashID);
+        System.out.println("\tdelete spark: " + hashID);
+    }
+
+    /**
      * 将表示文件长度的字符串转换成字节数
      *
      * @param fileSize 表示文件长度的字符串
