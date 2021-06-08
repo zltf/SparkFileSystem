@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Vector;
 
 /**
- * 记录目前在下载的文件需要的Spark文件，方便在文件接收完成后恢复原文件
+ * 记录目前在下载的文件需要的Spark文件，方便在文件接收完成后恢复原文件<br>
  * 单例模式，枚举实现
  *
  * @author <a href="https://www.zhiskey.cn">Zhiskey</a>
